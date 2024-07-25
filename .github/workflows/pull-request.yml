@@ -35,7 +35,7 @@ jobs:
           terraform init
           terraform plan
           terraform apply --auto-approve
-        working-directory: ${GITHUB_WORKSPACE}/infrastructure/terraform/core
+        working-directory: ${{ github.workspace }}/infrastructure/terraform/core
       # - name: Terraform Ops
       #   run: |
       #     terraform init
