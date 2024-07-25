@@ -25,7 +25,7 @@ jobs:
     steps:
 
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Azure CLI login
         uses: azure/login@v2.1.1
@@ -35,7 +35,7 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
 
       - name: Install Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@v3.1.1
         with:
           terraform_wrapper: false
 
