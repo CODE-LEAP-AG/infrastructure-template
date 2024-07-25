@@ -11,6 +11,11 @@ env:
   ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
+  # Terraform core and ops variables
+  TF_VAR_prefix: ${{ vars.TF_VAR_PREFIX }}
+  TF_VAR_env: ${{ vars.TF_VAR_ENV }}
+  TF_VAR_location: ${{ vars.TF_VAR_LOCATION }}
+
 jobs:
   build:
     runs-on: ubuntu-latest

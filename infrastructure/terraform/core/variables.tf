@@ -1,5 +1,5 @@
-variable "PREFIX" { type = string }
+variable "prefix" { type = string }
 
-variable "ENV" { type = string }
+variable "env" { type = string }
 
-variable "LOCATION" { type = string }
+variable "location" { type = string }
