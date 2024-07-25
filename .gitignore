@@ -1,0 +1,6 @@
+## Terraform
+.terraform*
+*.tfvars
+!terraform.example.tfvars
+terraform.tfstate
+terraform.local.tfstate*
