@@ -1,3 +1,10 @@
+// USER-ASSIGNED IDENTITY FOR AKS
+resource "azurerm_user_assigned_identity" "aks_identity" {
+  resource_group_name = var.rg_name
+  name                = "${var.prefix}${var.env}aksidentity"
+  location            = var.location
+}
+
 // AKS CLUSTER WITH AGIC (APPGW INGRESS CONTROLLER)
 resource "azurerm_kubernetes_cluster" "aks" {
   resource_group_name = var.rg_name
@@ -51,6 +58,6 @@ resource "azurerm_kubernetes_cluster_node_pool" "usernodepool" {
       node_count,
     ]
   }
-  depends_on = [ azurerm_kubernetes_cluster.aks ]
+  depends_on = [azurerm_kubernetes_cluster.aks]
 }
 

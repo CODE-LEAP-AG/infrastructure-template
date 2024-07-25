@@ -6,3 +6,4 @@ variable "rg_id" { type = string }
 variable "acr_id" { type = string }
 variable "rg_name" { type = string }
 variable "vnet_id" { type = string }
+variable "aks_identity_principal_id" { type = string }
