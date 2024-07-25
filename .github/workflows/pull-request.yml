@@ -30,12 +30,12 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_wrapper: false
-      # - name: Terraform Core
-      #   run: |
-      #     terraform init
-      #     terraform plan
-      #     terraform apply --auto-approve
-      #   working-directory: ${GITHUB_WORKSPACE}/infrastructure/terraform/core
+      - name: Terraform Core
+        run: |
+          terraform init
+          terraform plan
+          terraform apply --auto-approve
+        working-directory: ${GITHUB_WORKSPACE}/infrastructure/terraform/core
       # - name: Terraform Ops
       #   run: |
       #     terraform init
