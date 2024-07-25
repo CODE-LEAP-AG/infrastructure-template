@@ -1,16 +1,16 @@
 module "rg" {
   source   = "../modules/resource-group"
-  prefix   = var.prefix
-  location = var.location
-  env      = var.env
+  prefix   = var.PREFIX
+  location = var.LOCATION
+  env      = var.ENV
 }
 
 module "network" {
   depends_on = [module.rg]
   source     = "../modules/network"
-  prefix     = var.prefix
-  location   = var.location
-  env        = var.env
+  prefix     = var.PREFIX
+  location   = var.LOCATION
+  env        = var.ENV
   rg_name    = module.rg.rg.name
 }
 
@@ -18,19 +18,19 @@ module "appgw" {
   depends_on      = [module.network]
   source          = "../modules/application-gateway"
   rg_name         = module.rg.rg.name
-  env             = var.env
-  location        = var.location
-  prefix          = var.prefix
+  env             = var.ENV
+  location        = var.LOCATION
+  prefix          = var.PREFIX
   appgw_subnet_id = module.network.appgw_subnet.id
 }
 
 module "aks" {
   depends_on          = [module.appgw]
   source              = "../modules/aks-cluster"
-  prefix              = var.prefix
-  location            = var.location
+  prefix              = var.PREFIX
+  location            = var.LOCATION
   rg_name             = module.rg.rg.name
-  env                 = var.env
+  env                 = var.ENV
   vm_size             = "Standard_D2s_v3"
   syspool_node_count  = "1"
   syspool_min_count   = "1"
@@ -46,9 +46,9 @@ module "aks" {
 module "managed_identity" {
   depends_on   = [module.aks]
   source       = "../modules/managed-identity"
-  prefix       = var.prefix
-  env          = var.env
-  location     = var.location
+  prefix       = var.PREFIX
+  env          = var.ENV
+  location     = var.LOCATION
   cluster_name = module.aks.aks.name
   rg_id        = module.rg.rg.id
 }
