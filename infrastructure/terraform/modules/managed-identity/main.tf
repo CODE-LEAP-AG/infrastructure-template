@@ -15,3 +15,10 @@ resource "azurerm_role_assignment" "ra_ingressapplicationgateway_contributor" {
   role_definition_name = "Contributor"
   principal_id         = data.azurerm_user_assigned_identity.ma_ingressapplicationgateway.principal_id
 }
+
+// LET AKS CLUSTER HAVE PUSH ACCESS TO CONTAINER REGISTRY
+resource "azurerm_role_assignment" "ra_aks_acr_push" {
+  scope                = var.acr_id
+  role_definition_name = "AcrPush"
+  principal_id         = var.aks_principal_id
+}

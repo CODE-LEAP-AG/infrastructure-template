@@ -24,6 +24,15 @@ module "appgw" {
   appgw_subnet_id = module.network.appgw_subnet.id
 }
 
+module "container_registry" {
+  depends_on = [module.rg]
+  source     = "../modules/container-registry"
+  prefix     = var.prefix
+  env        = var.env
+  location   = var.location
+  rg_name    = module.rg.rg.name
+}
+
 module "aks" {
   depends_on          = [module.appgw]
   source              = "../modules/aks-cluster"
@@ -44,12 +53,13 @@ module "aks" {
 }
 
 module "managed_identity" {
-  depends_on   = [module.aks]
-  source       = "../modules/managed-identity"
-  prefix       = var.prefix
-  env          = var.env
-  location     = var.location
-  cluster_name = module.aks.aks.name
-  rg_id        = module.rg.rg.id
+  depends_on       = [module.aks, module.container_registry]
+  source           = "../modules/managed-identity"
+  prefix           = var.prefix
+  env              = var.env
+  location         = var.location
+  cluster_name     = module.aks.aks.name
+  rg_id            = module.rg.rg.id
+  acr_id           = module.container_registry.acr.id
+  aks_principal_id = module.aks.aks.kubelet_identity[0].object_id
 }
-
