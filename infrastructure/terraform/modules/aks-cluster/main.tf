@@ -1,18 +1,3 @@
-// AKS MANAGED IDENTITY
-resource "azurerm_user_assigned_identity" "aks_identity" {
-  resource_group_name = var.rg_name
-  name                = "${var.prefix}${var.env}aksidentity"
-  location            = var.location
-}
-// GRANT SCOPE "NETWORK CONTRIBUTOR" TO AKS IDENTITY
-resource "azurerm_role_assignment" "aks-mi-network-contributor" {
-  skip_service_principal_aad_check = true
-  scope                            = var.vnet_id
-  role_definition_name             = "Network Contributor"
-  principal_id                     = azurerm_user_assigned_identity.aks_identity.principal_id
-  depends_on                       = [azurerm_user_assigned_identity.aks_identity]
-}
-
 // AKS CLUSTER WITH AGIC (APPGW INGRESS CONTROLLER)
 resource "azurerm_kubernetes_cluster" "aks" {
   resource_group_name = var.rg_name

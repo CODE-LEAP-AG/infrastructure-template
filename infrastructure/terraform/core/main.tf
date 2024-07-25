@@ -60,6 +60,7 @@ module "managed_identity" {
   location         = var.location
   cluster_name     = module.aks.aks.name
   rg_id            = module.rg.rg.id
+  vnet_id          = module.network.vnet.id
   acr_id           = module.container_registry.acr.id
-  aks_principal_id = module.aks.aks.kubelet_identity[0].object_id
+  rg_name          = module.rg.rg.name
 }
