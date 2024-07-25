@@ -1,0 +1,64 @@
+name: "Pull request to Main Branch"
+
+on:
+  pull_request:
+    branches:
+      - main
+
+env:
+  # Used for App Registration Federated Authentication
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
+  # Terraform core and ops variables
+  TF_VAR_prefix: ${{ vars.TF_VAR_PREFIX }}
+  TF_VAR_env: ${{ vars.TF_VAR_ENV }}
+  TF_VAR_location: ${{ vars.TF_VAR_LOCATION }}
+
+jobs:
+  provision-infrastructure:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Azure CLI login
+        uses: azure/login@v2.1.1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Terraform Core
+        run: |
+          terraform init
+          terraform plan
+          terraform apply --auto-approve
+        working-directory: ${{ github.workspace }}/infrastructure/terraform/core
+
+      - name: Terraform Ops
+        run: |
+          terraform init
+          terraform plan
+          terraform apply --auto-approve
+        working-directory: ${{ github.workspace }}/infrastructure/terraform/ops
+
+      - name: Destroy Terraform Ops
+        run: |
+          terraform destroy --auto-approve
+        working-directory: ${{ github.workspace }}/infrastructure/terraform/ops
+
+      - name: Destroy Terraform Core
+        run: |
+          terraform destroy --auto-approve
+        working-directory: ${{ github.workspace }}/infrastructure/terraform/core

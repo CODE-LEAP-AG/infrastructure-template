@@ -7,7 +7,7 @@ module "storage_account" {
   prefix                = var.prefix
   location              = var.location
   env                   = var.env
-  rg_name               = data.azurerm_resource_group.rg
+  rg_name               = data.azurerm_resource_group.rg.name
   fs_name_debezium_conf = "conf"
   fs_name_debezium_data = "data"
   quota_debezium_conf   = 1
