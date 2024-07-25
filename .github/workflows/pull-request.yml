@@ -51,12 +51,12 @@ jobs:
           terraform init
           terraform plan
           terraform apply --auto-approve
-        working-directory: ${GITHUB_WORKSPACE}/infrastructure/terraform/ops
+        working-directory: ${{ github.workspace }}/infrastructure/terraform/ops
 
       - name: Destroy Terraform Ops
         run: |
           terraform destroy --auto-approve
-        working-directory: ${GITHUB_WORKSPACE}/infrastructure/terraform/ops
+        working-directory: ${{ github.workspace }}/infrastructure/terraform/ops
 
       - name: Destroy Terraform Core
         run: |
