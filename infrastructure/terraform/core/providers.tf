@@ -1,6 +1,7 @@
 provider "azurerm" {
   features {}
-  use_oidc = true
+  use_oidc                   = true
+  skip_provider_registration = true
 }
 
 terraform {
@@ -11,9 +12,10 @@ terraform {
     }
   }
   backend "azurerm" {
-    resource_group_name   = "demsytestrg"
-    storage_account_name  = "demsytest2507"
-    container_name        = "core"
-    key                   = "terraform.tfstate"
+    resource_group_name  = "demsytestrg"
+    storage_account_name = "demsytest2507"
+    container_name       = "core"
+    key                  = "terraform.tfstate"
+    use_oidc             = true
   }
 }
