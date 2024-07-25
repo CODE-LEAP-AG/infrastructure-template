@@ -1,5 +1,5 @@
 # Infrastructure Template
-Version: 0.1.0
+Version: 1.0.0
 
 Author: Thinh Nguyen
 
@@ -26,5 +26,5 @@ It can also by used as a reference for initialization stage to start a project m
 ```
 ## Tech stack
 - Docker
-- Terraform
+- Terraform with Azure
 - GitHub Actions
