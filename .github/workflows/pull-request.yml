@@ -17,27 +17,24 @@ env:
   TF_VAR_location: ${{ vars.TF_VAR_LOCATION }}
 
 jobs:
-  determine-actions:
+  determine-infra-changes:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read
     outputs:
       infrastructure: ${{ steps.determine-changes.outputs.infrastructure }}
-      frontend: ${{ steps.determine-changes.outputs.frontend }}
     steps:
       # For pull requests it's not necessary to checkout the code
       - uses: dorny/paths-filter@v3
         id: determine-changes
         with:
           filters: |
-            frontend:
-              - 'frontend/**'
             infrastructure:
               - 'infrastructure/**'
 
   provision-infrastructure:
-    needs: determine-actions
-    if: ${{ needs.determine-actions.outputs.infrastructure == 'true' }}
+    needs: determine-infra-changes
+    if: ${{ needs.determine-infra-changes.outputs.infrastructure == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -67,12 +64,26 @@ jobs:
           terraform plan
           terraform apply --auto-approve
         working-directory: ${{ github.workspace }}/infrastructure/terraform/ops
+  
+  determine-app-changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      frontend: ${{ steps.determine-changes.outputs.frontend }}
+    steps:
+      # For pull requests it's not necessary to checkout the code
+      - uses: dorny/paths-filter@v3
+        id: determine-changes
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
 
   build-frontend:
     needs:
-      - determine-actions
-      - provision-infrastructure
-    if: ${{ needs.determine-actions.outputs.frontend == 'true' }}
+      - determine-app-changes
+    if: ${{ needs.determine-app-changes.outputs.frontend == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
