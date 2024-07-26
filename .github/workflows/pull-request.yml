@@ -71,16 +71,6 @@ jobs:
           terraform apply --auto-approve
         working-directory: ${{ github.workspace }}/infrastructure/terraform/ops
 
-      # - name: Destroy Terraform Ops
-      #   run: |
-      #     terraform destroy --auto-approve
-      #   working-directory: ${{ github.workspace }}/infrastructure/terraform/ops
-
-      # - name: Destroy Terraform Core
-      #   run: |
-      #     terraform destroy --auto-approve
-      #   working-directory: ${{ github.workspace }}/infrastructure/terraform/core
-
   build-frontend:
     needs:
       - determine-actions
@@ -88,6 +78,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      id-token: write
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -101,3 +92,38 @@ jobs:
   
     - name: Login to ACR
       run: az acr login --name "${{ env.TF_VAR_prefix }}${{ env.TF_VAR_env }}acr"
+
+  # destroy-infrastructure:
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: read
+  #     id-token: write
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+
+  #     - name: Azure CLI login
+  #       uses: azure/login@v2.1.1
+  #       with:
+  #         client-id: ${{ secrets.AZURE_CLIENT_ID }}
+  #         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  #         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+
+  #     - name: Install Terraform
+  #       uses: hashicorp/setup-terraform@v3.1.1
+  #       with:
+  #         terraform_wrapper: false
+
+  #     - name: Destroy Terraform Ops
+  #       run: |
+  #         terraform init
+  #         terraform plan
+  #         terraform destroy --auto-approve
+  #       working-directory: ${{ github.workspace }}/infrastructure/terraform/ops
+
+  #     - name: Destroy Terraform Core
+  #       run: |
+  #         terraform init
+  #         terraform plan
+  #         terraform destroy --auto-approve
+  #       working-directory: ${{ github.workspace }}/infrastructure/terraform/core
