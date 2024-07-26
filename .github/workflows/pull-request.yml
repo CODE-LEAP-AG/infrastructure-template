@@ -144,7 +144,7 @@ jobs:
       uses: azure/setup-helm@v4
     - name: Apply Helm chart
       run: helm upgrade --install frontend . --set image.tag="${{ github.event.number }}" --set image.repository="${{ env.TF_VAR_prefix }}${{ env.TF_VAR_env }}acr.azurecr.io/frontend"
-      working-directory: ./infrastructure/helm-chart/frontend
+      working-directory: infrastructure/helm-chart/frontend
 
   # destroy-infrastructure:
   #   runs-on: ubuntu-latest
