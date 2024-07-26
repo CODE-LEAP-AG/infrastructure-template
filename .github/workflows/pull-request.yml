@@ -37,6 +37,7 @@ jobs:
 
   provision-infrastructure:
     needs: determine-actions
+    if: ${{ needs.determine-actions.outputs.infrastructure == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -75,6 +76,7 @@ jobs:
     needs:
       - determine-actions
       - provision-infrastructure
+    if: ${{ needs.determine-actions.outputs.frontend == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
