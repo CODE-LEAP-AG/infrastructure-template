@@ -61,3 +61,9 @@ resource "azurerm_kubernetes_cluster_node_pool" "usernodepool" {
   depends_on = [azurerm_kubernetes_cluster.aks]
 }
 
+// MANAGED-IDENTITY FOR USER POOL
+resource "azurerm_user_assigned_identity" "userpool_identity" {
+  resource_group_name = var.rg_name
+  name                = "${var.prefix}${var.env}userpoolidentity"
+  location            = var.location
+}
