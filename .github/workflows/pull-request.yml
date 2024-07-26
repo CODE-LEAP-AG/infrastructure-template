@@ -128,6 +128,9 @@ jobs:
   deploy-frontend:
     runs-on: ubuntu-latest
     needs: release-frontend
+    permissions:
+      contents: read
+      id-token: write
     steps:
     - name: Azure CLI login
       uses: azure/login@v2.1.1
