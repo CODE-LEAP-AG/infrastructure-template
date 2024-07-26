@@ -95,6 +95,12 @@ jobs:
     - name: Login to ACR
       run: az acr login --name "${{ env.TF_VAR_prefix }}${{ env.TF_VAR_env }}acr"
 
+    - name: Build and push Docker image
+      run: |
+        docker build -t "${{ env.TF_VAR_prefix }}${{ env.TF_VAR_env }}acr.azurecr.io/frontend:${{ github.sha }}" -f docker/Dockerfile .
+        docker push "${{ env.TF_VAR_prefix }}${{ env.TF_VAR_env }}acr.azurecr.io/frontend:${{ github.sha }}"
+      working-directory: ${{ github.workspace }}/frontend
+
   # destroy-infrastructure:
   #   runs-on: ubuntu-latest
   #   permissions:
