@@ -8,16 +8,14 @@ data "azurerm_user_assigned_identity" "ingressapplicationgateway" {
   resource_group_name = data.azurerm_resource_group.MC_demsyprodrg_demsyprodaks_germanywestcentral.name
   name                = "ingressapplicationgateway-${var.prefix}${var.env}aks"
 }
-
-// GRANT ROLE "CONTRIBUTOR" TO APPGW IDENTITY
 resource "azurerm_role_assignment" "ingressapplicationgateway_contributor_rg" {
   scope                = var.rg_id
   role_definition_name = "Contributor"
+  // grant identity "ingressapplicationgateway" contributor access to RG
   principal_id         = data.azurerm_user_assigned_identity.ingressapplicationgateway.principal_id
-  depends_on = [ data.azurerm_user_assigned_identity.ingressapplicationgateway ]
+  depends_on           = [data.azurerm_user_assigned_identity.ingressapplicationgateway]
 }
 
-// IDENTITY FOR AKS: ALREADY CREATED BY AKS
 // GRANT ROLE "NETWORK CONTRIBUTOR" TO AKS IDENTITY
 resource "azurerm_role_assignment" "aks_network_contributor" {
   skip_service_principal_aad_check = true
@@ -26,16 +24,21 @@ resource "azurerm_role_assignment" "aks_network_contributor" {
   principal_id                     = var.aks_identity_principal_id
 }
 
-// IDENTITY FOR AKS: ALREADY CREATED BY AKS
-// GRANT PUSH-PULL ACCESS FOR AKS
+// GRANT ACR PUSH-PULL TO AKS IDENTITY
 resource "azurerm_role_assignment" "aks_push_acr" {
   scope                = var.acr_id
   role_definition_name = "AcrPush"
   principal_id         = var.aks_identity_principal_id
 }
-// GRANT PUSH ACCESS FOR USER POOL
-resource "azurerm_role_assignment" "userpool_push_acr" {
+
+// IDENTITY FOR AGENT POOL: MANAGED BY RESOURCE-GROUP MC_
+data "azurerm_user_assigned_identity" "agentpool" {
+  resource_group_name = data.azurerm_resource_group.MC_demsyprodrg_demsyprodaks_germanywestcentral.name
+  name                = "${var.prefix}${var.env}aks-agentpool"
+}
+resource "azurerm_role_assignment" "agentpool_push_acr" {
   scope                = var.acr_id
   role_definition_name = "AcrPush"
-  principal_id         = var.userpool_identity_principal_id
+  // grant identity "agentpool" push access to ACR
+  principal_id         = data.azurerm_user_assigned_identity.agentpool.principal_id
 }

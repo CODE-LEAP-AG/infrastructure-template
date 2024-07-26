@@ -52,18 +52,11 @@ resource "azurerm_kubernetes_cluster_node_pool" "usernodepool" {
   max_count             = var.userpool_max_count
   kubernetes_cluster_id = azurerm_kubernetes_cluster.aks.id
   enable_auto_scaling   = true
-
+  
   lifecycle {
     ignore_changes = [
       node_count,
     ]
   }
   depends_on = [azurerm_kubernetes_cluster.aks]
-}
-
-// MANAGED-IDENTITY FOR USER POOL
-resource "azurerm_user_assigned_identity" "userpool_identity" {
-  resource_group_name = var.rg_name
-  name                = "${var.prefix}${var.env}userpoolidentity"
-  location            = var.location
 }
