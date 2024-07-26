@@ -22,11 +22,11 @@ jobs:
     permissions:
       pull-requests: read
     outputs:
-      infrastructure: ${{ steps.determine-changes.outputs.infrastructure }}
+      infrastructure: ${{ steps.determine-infra-changes.outputs.infrastructure }}
     steps:
       # For pull requests it's not necessary to checkout the code
       - uses: dorny/paths-filter@v3
-        id: determine-changes
+        id: determine-infra-changes
         with:
           filters: |
             infrastructure:
@@ -72,11 +72,11 @@ jobs:
     permissions:
       pull-requests: read
     outputs:
-      frontend: ${{ steps.determine-changes.outputs.frontend }}
+      frontend: ${{ steps.determine-app-changes.outputs.frontend }}
     steps:
       # For pull requests it's not necessary to checkout the code
       - uses: dorny/paths-filter@v3
-        id: determine-changes
+        id: determine-app-changes
         with:
           filters: |
             frontend:
