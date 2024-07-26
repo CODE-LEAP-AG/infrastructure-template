@@ -83,8 +83,7 @@ jobs:
               - 'frontend/**'
 
   build-frontend:
-    needs:
-      - determine-app-changes
+    needs: determine-app-changes
     if: ${{ needs.determine-app-changes.outputs.frontend == 'true' }}
     runs-on: ubuntu-latest
     permissions:
