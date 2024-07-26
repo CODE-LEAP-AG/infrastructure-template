@@ -18,10 +18,3 @@ output "aks_identity" {
     principal_id = azurerm_user_assigned_identity.aks_identity.principal_id
   }
 }
-
-output "userpool_identity" {
-  value = {
-    name         = azurerm_user_assigned_identity.userpool_identity.name
-    principal_id = azurerm_user_assigned_identity.userpool_identity.principal_id
-  }
-}

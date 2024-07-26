@@ -64,5 +64,4 @@ module "managed_identity" {
   acr_id                         = module.container_registry.acr.id
   rg_name                        = module.rg.rg.name
   aks_identity_principal_id      = module.aks.aks_identity.principal_id
-  userpool_identity_principal_id = module.aks.userpool_identity.principal_id
 }
