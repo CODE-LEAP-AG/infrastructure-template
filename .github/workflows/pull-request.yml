@@ -55,11 +55,6 @@ jobs:
         uses: hashicorp/setup-terraform@v3.1.1
         with:
           terraform_wrapper: false
-      - name: Terraform unlock
-        run: |
-          terraform init
-          terraform force-unlock -force 046b9bbb-ad5b-bdf3-c416-75e1b3ae5347
-        working-directory: ${{ github.workspace }}/infrastructure/terraform/core
       - name: Terraform Core
         run: |
           terraform init
