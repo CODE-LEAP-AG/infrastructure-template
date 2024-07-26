@@ -14,7 +14,7 @@ resource "azurerm_role_assignment" "ra_ingressapplicationgateway_contributor" {
   scope                = var.rg_id
   role_definition_name = "Contributor"
   principal_id         = data.azurerm_user_assigned_identity.ma_ingressapplicationgateway.principal_id
-  depends_on = [ data.azurerm_user_assigned_identity.ma_ingressapplicationgateway ]
+  depends_on           = [data.azurerm_user_assigned_identity.ma_ingressapplicationgateway]
 }
 
 // IDENTITY FOR AKS: ALREADY CREATED BY AKS
@@ -32,4 +32,9 @@ resource "azurerm_role_assignment" "ra_aks_acr_push" {
   scope                = var.acr_id
   role_definition_name = "AcrPush"
   principal_id         = var.aks_identity_principal_id
+}
+resource "azurerm_role_assignment" "ra_userpool_acr_push" {
+  scope                = var.acr_id
+  role_definition_name = "AcrPush"
+  principal_id         = var.userpool_identity_principal_id
 }
