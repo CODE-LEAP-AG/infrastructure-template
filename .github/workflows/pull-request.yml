@@ -17,13 +17,31 @@ env:
   TF_VAR_location: ${{ vars.TF_VAR_LOCATION }}
 
 jobs:
+  determine-actions:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      infrastructure: ${{ steps.determine-changes.outputs.infrastructure }}
+      frontend: ${{ steps.determine-changes.outputs.frontend }}
+    steps:
+      # For pull requests it's not necessary to checkout the code
+      - uses: dorny/paths-filter@v3
+        id: determine-changes
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
+            infrastructure:
+              - 'infrastructure/**'
+
   provision-infrastructure:
+    needs: determine-actions
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
     steps:
-
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -53,12 +71,33 @@ jobs:
           terraform apply --auto-approve
         working-directory: ${{ github.workspace }}/infrastructure/terraform/ops
 
-      - name: Destroy Terraform Ops
-        run: |
-          terraform destroy --auto-approve
-        working-directory: ${{ github.workspace }}/infrastructure/terraform/ops
+      # - name: Destroy Terraform Ops
+      #   run: |
+      #     terraform destroy --auto-approve
+      #   working-directory: ${{ github.workspace }}/infrastructure/terraform/ops
 
-      - name: Destroy Terraform Core
-        run: |
-          terraform destroy --auto-approve
-        working-directory: ${{ github.workspace }}/infrastructure/terraform/core
+      # - name: Destroy Terraform Core
+      #   run: |
+      #     terraform destroy --auto-approve
+      #   working-directory: ${{ github.workspace }}/infrastructure/terraform/core
+
+  build-frontend:
+    needs:
+      - determine-actions
+      - provision-infrastructure
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Azure CLI login
+      uses: azure/login@v2.1.1
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+  
+    - name: Login to ACR
+      run: az acr login --name "${{ env.TF_VAR_prefix }}${{ env.TF_VAR_env }}acr"
