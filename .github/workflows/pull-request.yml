@@ -25,6 +25,9 @@ jobs:
   frontend:
     needs: provision-infrastructure
     uses: './.github/workflows/rw-all-in-one.yml'
+    permissions:
+      contents: read
+      id-token: write
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
@@ -39,6 +42,9 @@ jobs:
   backend:
     needs: provision-infrastructure
     uses: './.github/workflows/rw-all-in-one.yml'
+    permissions:
+      contents: read
+      id-token: write
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
