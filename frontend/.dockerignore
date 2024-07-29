@@ -16,11 +16,6 @@ logs
 coverage
 *.test.js
 
-# Development Configuration
-.env
-.env.local
-.env.development.local
-
 # Editor Configuration
 .vscode
 
