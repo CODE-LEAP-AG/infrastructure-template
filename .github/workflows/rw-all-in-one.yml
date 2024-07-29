@@ -56,8 +56,8 @@ jobs:
         run: az acr login --name "${{ inputs.acr }}"
       - name: Build and push Docker image
         run: |
-          docker build -t "${{ inputs.acr }}/${{ inputs.project }}:${{ github.event.number }}" .
-          docker push "${{ inputs.acr }}/${{ inputs.project }}:${{ github.event.number }}"
+          docker build -t "${{ inputs.acr }}.azurecr.io/${{ inputs.project }}:${{ github.event.number }}" .
+          docker push "${{ inputs.acr }}.azurecr.io/${{ inputs.project }}:${{ github.event.number }}"
         working-directory: ${{ github.workspace }}/${{ inputs.project }}
   
   deploy:
