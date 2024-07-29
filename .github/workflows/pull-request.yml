@@ -9,6 +9,9 @@ jobs:
 
   provision-infrastructure:
     uses: './.github/workflows/rw-provision-infrastructure.yml'
+    permissions:
+      contents: read
+      id-token: write
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
