@@ -22,75 +22,29 @@ jobs:
       TF_VAR_location: ${{ vars.TF_VAR_LOCATION }}
 
   # FRONTEND ---------------------------------------------------------
-  build-frontend:
+  frontend:
     needs: provision-infrastructure
-    uses: './.github/workflows/rw-build.yml'
-    with:
-      project: frontend
-
-  release-frontend:
-    needs: build-frontend
-    permissions:
-      contents: read
-      id-token: write
-    uses: './.github/workflows/rw-release.yml'
+    uses: './.github/workflows/rw-all-in-one.yml'
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
     with:
+      acr: ${{ vars.TF_VAR_ENV }}${{ vars.TF_VAR_PREFIX }}acr
+      cluster-name: ${{ vars.TF_VAR_ENV }}${{ vars.TF_VAR_PREFIX }}aks
+      resource-group-name: ${{ vars.TF_VAR_ENV }}${{ vars.TF_VAR_PREFIX }}rg
       project: frontend
-      acr: ${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}acr.azurecr.io
     
-  deploy-frontend:
-    needs: release-frontend
-    permissions:
-      contents: read
-      id-token: write
-    uses: './.github/workflows/rw-deploy.yml'
-    secrets:
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-    with:
-      resource-group-name: ${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}rg
-      acr: ${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}acr.azurecr.io
-      cluster-name: ${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}aks
-      project: frontend
-
   # BACKEND ---------------------------------------------------------
-  build-backend:
+  backend:
     needs: provision-infrastructure
-    uses: './.github/workflows/rw-build.yml'
-    with:
-      project: frontend
-
-  release-backend:
-    needs: build-backend
-    permissions:
-      contents: read
-      id-token: write
-    uses: './.github/workflows/rw-release.yml'
+    uses: './.github/workflows/rw-all-in-one.yml'
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
     with:
-      project: backend
-      acr: ${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}acr.azurecr.io
-    
-  deploy-backend:
-    needs: release-backend
-    permissions:
-      contents: read
-      id-token: write
-    uses: './.github/workflows/rw-deploy.yml'
-    secrets:
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-    with:
-      resource-group-name: ${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}rg
-      acr: ${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}acr.azurecr.io
-      cluster-name: ${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}aks
+      acr: ${{ vars.TF_VAR_ENV }}${{ vars.TF_VAR_PREFIX }}acr
+      cluster-name: ${{ vars.TF_VAR_ENV }}${{ vars.TF_VAR_PREFIX }}aks
+      resource-group-name: ${{ vars.TF_VAR_ENV }}${{ vars.TF_VAR_PREFIX }}rg
       project: backend
