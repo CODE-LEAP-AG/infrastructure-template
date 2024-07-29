@@ -1,0 +1,69 @@
+name: "rw-provision-infrastructure"
+
+on:
+  workflow_call:
+
+    secrets:
+      AZURE_CLIENT_ID:
+        required: true
+      AZURE_SUBSCRIPTION_ID:
+        required: true
+      AZURE_TENANT_ID:
+        required: true
+        
+    inputs:
+      TF_VAR_prefix:
+        required: true
+        type: string
+      TF_VAR_env:
+        required: true
+        type: string
+      TF_VAR_location:
+        required: true
+        type: string
+
+jobs:
+  provision-infrastructure:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Azure CLI login
+        uses: azure/login@v2.1.1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3.1.1
+        with:
+          terraform_wrapper: false
+      - name: Terraform Core
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          TF_VAR_prefix: ${{ inputs.TF_VAR_PREFIX }}
+          TF_VAR_env: ${{ inputs.TF_VAR_ENV }}
+          TF_VAR_location: ${{ inputs.TF_VAR_LOCATION }}
+        run: |
+          terraform init
+          terraform plan
+          terraform apply --auto-approve
+        working-directory: ${{ github.workspace }}/infrastructure/terraform/core
+      - name: Terraform Ops
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          TF_VAR_prefix: ${{ inputs.TF_VAR_PREFIX }}
+          TF_VAR_env: ${{ inputs.TF_VAR_ENV }}
+          TF_VAR_location: ${{ inputs.TF_VAR_LOCATION }}
+        run: |
+          terraform init
+          terraform plan
+          terraform apply --auto-approve
+        working-directory: ${{ github.workspace }}/infrastructure/terraform/ops

@@ -5,49 +5,18 @@ on:
     branches:
       - main
 
-env:
-  # Used for App Registration Federated Authentication
-  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-
-  # Terraform core and ops variables
-  TF_VAR_prefix: ${{ vars.TF_VAR_PREFIX }}
-  TF_VAR_env: ${{ vars.TF_VAR_ENV }}
-  TF_VAR_location: ${{ vars.TF_VAR_LOCATION }}
-
 jobs:
 
   provision-infrastructure:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Azure CLI login
-        uses: azure/login@v2.1.1
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-      - name: Install Terraform
-        uses: hashicorp/setup-terraform@v3.1.1
-        with:
-          terraform_wrapper: false
-      - name: Terraform Core
-        run: |
-          terraform init
-          terraform plan
-          terraform apply --auto-approve
-        working-directory: ${{ github.workspace }}/infrastructure/terraform/core
-      - name: Terraform Ops
-        run: |
-          terraform init
-          terraform plan
-          terraform apply --auto-approve
-        working-directory: ${{ github.workspace }}/infrastructure/terraform/ops
+    uses: './.github/workflows/rw-provision-infrastructure.yml'
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+    with:
+      TF_VAR_prefix: ${{ vars.TF_VAR_PREFIX }}
+      TF_VAR_env: ${{ vars.TF_VAR_ENV }}
+      TF_VAR_location: ${{ vars.TF_VAR_LOCATION }}
 
   build-frontend:
     needs: provision-infrastructure
@@ -82,11 +51,11 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
       - name: Login to ACR
-        run: az acr login --name "${{ env.TF_VAR_prefix }}${{ env.TF_VAR_env }}acr"
+        run: az acr login --name "${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}acr"
       - name: Build and push Docker image
         run: |
-          docker build -t "${{ env.TF_VAR_prefix }}${{ env.TF_VAR_env }}acr.azurecr.io/frontend:${{ github.event.number }}" .
-          docker push "${{ env.TF_VAR_prefix }}${{ env.TF_VAR_env }}acr.azurecr.io/frontend:${{ github.event.number }}"
+          docker build -t "${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}acr.azurecr.io/frontend:${{ github.event.number }}" .
+          docker push "${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}acr.azurecr.io/frontend:${{ github.event.number }}"
         working-directory: ${{ github.workspace }}/frontend
 
   deploy-frontend:
@@ -105,11 +74,11 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
       - name: Update kube-config
-        run: az aks get-credentials --resource-group "${{ env.TF_VAR_prefix }}${{ env.TF_VAR_env }}rg" --name "${{ env.TF_VAR_prefix }}${{ env.TF_VAR_env }}aks"
+        run: az aks get-credentials --resource-group "${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}rg" --name "${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}aks"
       - name: Install Helm
         uses: azure/setup-helm@v4
       - name: Apply Helm chart
-        run: helm upgrade --install frontend . --set image.tag="${{ github.event.number }}" --set image.repository="${{ env.TF_VAR_prefix }}${{ env.TF_VAR_env }}acr.azurecr.io/frontend"
+        run: helm upgrade --install frontend . --set image.tag="${{ github.event.number }}" --set image.repository="${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}acr.azurecr.io/frontend"
         working-directory: ${{ github.workspace }}/infrastructure/helm-chart/frontend
 
   build-backend:
@@ -145,11 +114,11 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
       - name: Login to ACR
-        run: az acr login --name "${{ env.TF_VAR_prefix }}${{ env.TF_VAR_env }}acr"
+        run: az acr login --name "${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}acr"
       - name: Build and push Docker image
         run: |
-          docker build -t "${{ env.TF_VAR_prefix }}${{ env.TF_VAR_env }}acr.azurecr.io/backend:${{ github.event.number }}" .
-          docker push "${{ env.TF_VAR_prefix }}${{ env.TF_VAR_env }}acr.azurecr.io/backend:${{ github.event.number }}"
+          docker build -t "${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}acr.azurecr.io/backend:${{ github.event.number }}" .
+          docker push "${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}acr.azurecr.io/backend:${{ github.event.number }}"
         working-directory: ${{ github.workspace }}/backend
 
   deploy-backend:
@@ -168,10 +137,10 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
       - name: Update kube-config
-        run: az aks get-credentials --resource-group "${{ env.TF_VAR_prefix }}${{ env.TF_VAR_env }}rg" --name "${{ env.TF_VAR_prefix }}${{ env.TF_VAR_env }}aks"
+        run: az aks get-credentials --resource-group "${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}rg" --name "${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}aks"
       - name: Install Helm
         uses: azure/setup-helm@v4
       - name: Apply Helm chart
-        run: helm upgrade --install backend . --set image.tag="${{ github.event.number }}" --set image.repository="${{ env.TF_VAR_prefix }}${{ env.TF_VAR_env }}acr.azurecr.io/backend"
+        run: helm upgrade --install backend . --set image.tag="${{ github.event.number }}" --set image.repository="${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}acr.azurecr.io/backend"
         working-directory: ${{ github.workspace }}/infrastructure/helm-chart/backend
  
