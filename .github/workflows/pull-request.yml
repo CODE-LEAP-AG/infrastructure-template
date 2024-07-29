@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-
+  # INFRASTRUCTURE ----------------------------------------------------
   provision-infrastructure:
     uses: './.github/workflows/rw-provision-infrastructure.yml'
     permissions:
@@ -21,129 +21,76 @@ jobs:
       TF_VAR_env: ${{ vars.TF_VAR_ENV }}
       TF_VAR_location: ${{ vars.TF_VAR_LOCATION }}
 
+  # FRONTEND ---------------------------------------------------------
   build-frontend:
     needs: provision-infrastructure
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Install Node 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-      - name: Build and Test React app
-        run: |
-          npm install
-          npm run build
-          npm test
-        working-directory: ${{ github.workspace }}/frontend
+    uses: './.github/workflows/rw-build.yml'
+    with:
+      project: frontend
 
   release-frontend:
     needs: build-frontend
-    runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Azure CLI login
-        uses: azure/login@v2.1.1
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-      - name: Login to ACR
-        run: az acr login --name "${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}acr"
-      - name: Build and push Docker image
-        run: |
-          docker build -t "${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}acr.azurecr.io/frontend:${{ github.event.number }}" .
-          docker push "${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}acr.azurecr.io/frontend:${{ github.event.number }}"
-        working-directory: ${{ github.workspace }}/frontend
-
+    uses: './.github/workflows/rw-release.yml'
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+    with:
+      project: frontend
+      acr: ${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}acr.azurecr.io
+    
   deploy-frontend:
-    runs-on: ubuntu-latest
     needs: release-frontend
     permissions:
       contents: read
       id-token: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Azure CLI login
-        uses: azure/login@v2.1.1
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-      - name: Update kube-config
-        run: az aks get-credentials --resource-group "${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}rg" --name "${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}aks"
-      - name: Install Helm
-        uses: azure/setup-helm@v4
-      - name: Apply Helm chart
-        run: helm upgrade --install frontend . --set image.tag="${{ github.event.number }}" --set image.repository="${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}acr.azurecr.io/frontend"
-        working-directory: ${{ github.workspace }}/infrastructure/helm-chart/frontend
+    uses: './.github/workflows/rw-deploy.yml'
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+    with:
+      resource-group-name: ${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}rg
+      acr: ${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}acr.azurecr.io
+      cluster-name: ${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}aks
+      project: frontend
 
+  # BACKEND ---------------------------------------------------------
   build-backend:
     needs: provision-infrastructure
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Install Node 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-      - name: Build and Test NestJS app
-        run: |
-          npm install
-          npm run build
-          npm test
-        working-directory: ${{ github.workspace }}/backend
+    uses: './.github/workflows/rw-build.yml'
+    with:
+      project: frontend
 
   release-backend:
     needs: build-backend
-    runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Azure CLI login
-        uses: azure/login@v2.1.1
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-      - name: Login to ACR
-        run: az acr login --name "${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}acr"
-      - name: Build and push Docker image
-        run: |
-          docker build -t "${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}acr.azurecr.io/backend:${{ github.event.number }}" .
-          docker push "${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}acr.azurecr.io/backend:${{ github.event.number }}"
-        working-directory: ${{ github.workspace }}/backend
-
+    uses: './.github/workflows/rw-release.yml'
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+    with:
+      project: backend
+      acr: ${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}acr.azurecr.io
+    
   deploy-backend:
-    runs-on: ubuntu-latest
     needs: release-backend
     permissions:
       contents: read
       id-token: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Azure CLI login
-        uses: azure/login@v2.1.1
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-      - name: Update kube-config
-        run: az aks get-credentials --resource-group "${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}rg" --name "${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}aks"
-      - name: Install Helm
-        uses: azure/setup-helm@v4
-      - name: Apply Helm chart
-        run: helm upgrade --install backend . --set image.tag="${{ github.event.number }}" --set image.repository="${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}acr.azurecr.io/backend"
-        working-directory: ${{ github.workspace }}/infrastructure/helm-chart/backend
- 
+    uses: './.github/workflows/rw-deploy.yml'
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+    with:
+      resource-group-name: ${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}rg
+      acr: ${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}acr.azurecr.io
+      cluster-name: ${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}aks
+      project: backend
