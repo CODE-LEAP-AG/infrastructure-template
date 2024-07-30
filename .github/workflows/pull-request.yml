@@ -10,10 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read
-    outputs:
-      backend: ${{ steps.filter.outputs.backend }}
-      frontend: ${{ steps.filter.outputs.frontend }}
-      infrastructure: ${{ steps.filter.outputs.infrastructure }}
     steps:
     # For pull requests it's not necessary to checkout the code
       - uses: dorny/paths-filter@v3
@@ -26,11 +22,16 @@ jobs:
               - 'frontend/**'
             infrastructure:
               - 'infrastructure/**'
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      infrastructure: ${{ steps.filter.outputs.infrastructure }}
 
   # INFRASTRUCTURE ----------------------------------------------------
   provision-infrastructure:
     needs: determine-actions
     uses: './.github/workflows/rw-provision-infrastructure.yml'
+    if: ${{ needs.determine-actions.outputs.infrastructure == 'true' }}
     permissions:
       contents: read
       id-token: write
