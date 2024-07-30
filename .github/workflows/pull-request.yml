@@ -47,6 +47,9 @@ jobs:
   # FRONTEND ---------------------------------------------------------
   frontend:
     needs: [provision-infrastructure, determine-actions]
+    # Condition: Run either when
+    # - provision-infrastructure job is skipped AND frontend is changed
+    # - frontend is changed
     if: (always() && needs.provision-infrastructure.result == 'skipped' && needs.determine-actions.outputs.frontend=='true' ) || needs.determine-actions.outputs.frontend == 'true'
     uses: "./.github/workflows/rw-all-in-one.yml"
     permissions:
@@ -65,6 +68,9 @@ jobs:
   # BACKEND ---------------------------------------------------------
   backend:
     needs: [provision-infrastructure, determine-actions]
+    # Condition: Run either when
+    # - provision-infrastructure job is skipped AND backend is changed
+    # - backend is changed
     if: (always() && needs.provision-infrastructure.result == 'skipped' && needs.determine-actions.outputs.backend=='true' ) || needs.determine-actions.outputs.backend == 'true'
     uses: "./.github/workflows/rw-all-in-one.yml"
     permissions:
