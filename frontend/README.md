@@ -71,3 +71,4 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/t
 
 Thinh added this line to test CI/CD
 Thinh added this line to test CI/CD
+Thinh added this line to test CI/CD

@@ -10,11 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read
-    outputs:
-      backend: ${{ steps.filter.outputs.backend }}
-      frontend: ${{ steps.filter.outputs.frontend }}
     steps:
-    # For pull requests it's not necessary to checkout the code
+      # For pull requests it's not necessary to checkout the code
       - uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -23,11 +20,18 @@ jobs:
               - 'backend/**'
             frontend:
               - 'frontend/**'
+            infrastructure:
+              - 'infrastructure/**'
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      infrastructure: ${{ steps.filter.outputs.infrastructure }}
 
   # INFRASTRUCTURE ----------------------------------------------------
   provision-infrastructure:
     needs: determine-actions
-    uses: './.github/workflows/rw-provision-infrastructure.yml'
+    uses: "./.github/workflows/rw-provision-infrastructure.yml"
+    if: ${{ needs.determine-actions.outputs.infrastructure == 'true' }}
     permissions:
       contents: read
       id-token: write
@@ -42,9 +46,12 @@ jobs:
 
   # FRONTEND ---------------------------------------------------------
   frontend:
-    needs: provision-infrastructure
-    if: ${{ needs.determine-actions.outputs.frontend == 'true' }}
-    uses: './.github/workflows/rw-all-in-one.yml'
+    needs: [provision-infrastructure, determine-actions]
+    # Condition: Run either when
+    # - provision-infrastructure job is skipped AND frontend is changed
+    # - frontend is changed
+    if: (always() && needs.provision-infrastructure.result == 'skipped' && needs.determine-actions.outputs.frontend=='true' ) || needs.determine-actions.outputs.frontend == 'true'
+    uses: "./.github/workflows/rw-all-in-one.yml"
     permissions:
       contents: read
       id-token: write
@@ -57,12 +64,15 @@ jobs:
       cluster-name: ${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}aks
       resource-group-name: ${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}rg
       project: frontend
-    
+
   # BACKEND ---------------------------------------------------------
   backend:
-    needs: provision-infrastructure
-    if: ${{ needs.determine-actions.outputs.backend == 'true' }}
-    uses: './.github/workflows/rw-all-in-one.yml'
+    needs: [provision-infrastructure, determine-actions]
+    # Condition: Run either when
+    # - provision-infrastructure job is skipped AND backend is changed
+    # - backend is changed
+    if: (always() && needs.provision-infrastructure.result == 'skipped' && needs.determine-actions.outputs.backend=='true' ) || needs.determine-actions.outputs.backend == 'true'
+    uses: "./.github/workflows/rw-all-in-one.yml"
     permissions:
       contents: read
       id-token: write
