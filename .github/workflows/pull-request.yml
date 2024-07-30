@@ -6,8 +6,27 @@ on:
       - main
 
 jobs:
+  determine-actions:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+    # For pull requests it's not necessary to checkout the code
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            frontend:
+              - 'frontend/**'
+
   # INFRASTRUCTURE ----------------------------------------------------
   provision-infrastructure:
+    needs: determine-actions
     uses: './.github/workflows/rw-provision-infrastructure.yml'
     permissions:
       contents: read
@@ -24,6 +43,7 @@ jobs:
   # FRONTEND ---------------------------------------------------------
   frontend:
     needs: provision-infrastructure
+    if: ${{ needs.determine-actions.outputs.frontend == 'true' }}
     uses: './.github/workflows/rw-all-in-one.yml'
     permissions:
       contents: read
@@ -41,6 +61,7 @@ jobs:
   # BACKEND ---------------------------------------------------------
   backend:
     needs: provision-infrastructure
+    if: ${{ needs.determine-actions.outputs.backend == 'true' }}
     uses: './.github/workflows/rw-all-in-one.yml'
     permissions:
       contents: read
