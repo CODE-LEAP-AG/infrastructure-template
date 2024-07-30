@@ -6,7 +6,43 @@ on:
       - main
 
 jobs:
-  determine-actions:
+  determine-infra-changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+    # For pull requests it's not necessary to checkout the code
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            infrastructure:
+              - 'infrastructure/**'
+
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      infrastructure: ${{ steps.filter.outputs.infrastructure }}
+
+  # INFRASTRUCTURE ----------------------------------------------------
+  provision-infrastructure:
+    needs: determine-infra-changes
+    uses: './.github/workflows/rw-provision-infrastructure.yml'
+    if: ${{ needs.determine-infra-changes.outputs.infrastructure == 'true' }}
+    permissions:
+      contents: read
+      id-token: write
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+    with:
+      TF_VAR_prefix: ${{ vars.TF_VAR_PREFIX }}
+      TF_VAR_env: ${{ vars.TF_VAR_ENV }}
+      TF_VAR_location: ${{ vars.TF_VAR_LOCATION }}
+
+  # DETERMINE ACTIONS ------------------------------------------------
+  determine-app-changes:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read
@@ -20,34 +56,15 @@ jobs:
               - 'backend/**'
             frontend:
               - 'frontend/**'
-            infrastructure:
-              - 'infrastructure/**'
+
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
-      infrastructure: ${{ steps.filter.outputs.infrastructure }}
-
-  # INFRASTRUCTURE ----------------------------------------------------
-  provision-infrastructure:
-    needs: determine-actions
-    uses: './.github/workflows/rw-provision-infrastructure.yml'
-    if: ${{ needs.determine-actions.outputs.infrastructure == 'true' }}
-    permissions:
-      contents: read
-      id-token: write
-    secrets:
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-    with:
-      TF_VAR_prefix: ${{ vars.TF_VAR_PREFIX }}
-      TF_VAR_env: ${{ vars.TF_VAR_ENV }}
-      TF_VAR_location: ${{ vars.TF_VAR_LOCATION }}
 
   # FRONTEND ---------------------------------------------------------
   frontend:
-    needs: [determine-actions, provision-infrastructure]
-    if: ${{ needs.determine-actions.outputs.frontend == 'true' }}
+    needs: determine-app-changes
+    if: ${{ needs.determine-app-changes.outputs.frontend == 'true' }}
     uses: './.github/workflows/rw-all-in-one.yml'
     permissions:
       contents: read
@@ -64,8 +81,8 @@ jobs:
     
   # BACKEND ---------------------------------------------------------
   backend:
-    needs: provision-infrastructure
-    if: ${{ needs.determine-actions.outputs.backend == 'true' }}
+    needs: determine-app-changes
+    if: ${{ needs.determine-app-changes.outputs.backend == 'true' }}
     uses: './.github/workflows/rw-all-in-one.yml'
     permissions:
       contents: read
