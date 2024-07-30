@@ -1,11 +1,10 @@
 # Infrastructure Template
-Version: 1.6.0
+Version: 1.7.0
 
 Author: Thinh Nguyen
 
-## Version update (1.6.0)
-- Created sample NestJS application
-- Created CI/CD to deploy NestJS application to Kubernetes
+## Version update (1.7.0)
+- Created a reusable all-in-one workflow for Frontend and Backend
 
 ## Motivation
 This template makes use of monorepo approach to create a common sample codebase. 
