@@ -47,7 +47,7 @@ jobs:
   # FRONTEND ---------------------------------------------------------
   frontend:
     needs: [provision-infrastructure, determine-actions]
-    if: (always() && needs.provision-infrastructure.result == 'skipped') || needs.determine-actions.outputs.frontend == 'true'
+    if: (always() && needs.provision-infrastructure.result == 'skipped' && needs.determine-actions.outputs.frontend=='true' ) || needs.determine-actions.outputs.frontend == 'true'
     uses: "./.github/workflows/rw-all-in-one.yml"
     permissions:
       contents: read
@@ -65,7 +65,7 @@ jobs:
   # BACKEND ---------------------------------------------------------
   backend:
     needs: [provision-infrastructure, determine-actions]
-    if: (always() && needs.provision-infrastructure.result == 'skipped') || needs.determine-actions.outputs.backend == 'true'
+    if: (always() && needs.provision-infrastructure.result == 'skipped' && needs.determine-actions.outputs.backend=='true' ) || needs.determine-actions.outputs.backend == 'true'
     uses: "./.github/workflows/rw-all-in-one.yml"
     permissions:
       contents: read
