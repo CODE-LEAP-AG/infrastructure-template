@@ -12,7 +12,7 @@ resource "azurerm_postgresql_flexible_server" "pg_flexlible_server" {
   version      = "12"
 
   high_availability {
-    mode                      = "SameZone"
+    mode = "SameZone"
   }
 
   lifecycle {
@@ -26,11 +26,9 @@ resource "azurerm_postgresql_flexible_server" "pg_flexlible_server" {
   }
 }
 
-resource "azurerm_postgresql_database" "pg_database" {
-  depends_on          = [azurerm_postgresql_flexible_server.pg_flexlible_server]
-  name                = "${var.prefix}${var.env}pgdatabase"
-  resource_group_name = var.rg_name
-  server_name         = azurerm_postgresql_flexible_server.pg_flexlible_server.name
-  charset             = "UTF8"
-  collation           = "English_United States.1252"
+resource "azurerm_postgresql_flexible_server_database" "pg_database" {
+  name      = "${var.prefix}${var.env}pgdatabase"
+  server_id = azurerm_postgresql_flexible_server.pg_flexlible_server.id
+  charset   = "UTF8"
+  collation = "en_US.utf8"
 }
