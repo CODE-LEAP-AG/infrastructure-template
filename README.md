@@ -1,10 +1,10 @@
 # Infrastructure Template
-Version: 1.7.0
+Version: 1.8.0
 
 Author: Thinh Nguyen
 
-## Version update (1.7.0)
-- Created a reusable all-in-one workflow for Frontend and Backend
+## Version update (1.8.0)
+- Created Azure SQL database for PostgreSQL
 
 ## Motivation
 This template makes use of monorepo approach to create a common sample codebase. 
@@ -61,3 +61,7 @@ In GitHub repository settings, create these 3 secrets with their corresponding v
 - AZURE_CLIENT_ID
 - AZURE_SUBSCRIPTION_ID
 - AZURE_TENANT_ID
+
+Some other secrets you might need to provide:
+- TF_VAR_ADMINISTRATOR_LOGIN (database username)
+- TF_VAR_ADMINISTRATOR_LOGIN_PASSWORD (database password)

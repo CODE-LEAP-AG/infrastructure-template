@@ -29,6 +29,12 @@ resource "azurerm_kubernetes_cluster" "aks" {
     ]
   }
 
+  lifecycle {
+    ignore_changes = [
+      default_node_pool
+    ]
+  }
+
   ingress_application_gateway {
     gateway_id = var.appgw_id
   }
@@ -52,7 +58,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "usernodepool" {
   max_count             = var.userpool_max_count
   kubernetes_cluster_id = azurerm_kubernetes_cluster.aks.id
   enable_auto_scaling   = true
-  
+
   lifecycle {
     ignore_changes = [
       node_count,

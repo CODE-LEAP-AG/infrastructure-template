@@ -1,6 +1,6 @@
 // MODULE: RESOURCE GROUP
-prefix = ""
-env = ""
+prefix   = ""
+env      = ""
 location = ""
 
 // MODULE: VNET
@@ -14,3 +14,10 @@ location = ""
 
 // MODULE: MANAGED IDENTITY
 // Do not have any new variables needed.
+
+// MODULE: STORAGE ACCOUNT
+// Do not have any new variables needed.
+
+// MODULE: SQL DATABASE
+administrator_login          = ""
+administrator_login_password = ""
