@@ -10,6 +10,10 @@ on:
         required: true
       AZURE_TENANT_ID:
         required: true
+      TF_VAR_administrator_login:
+        required: true
+      TF_VAR_administrator_login_password:
+        required: true
         
     inputs:
       TF_VAR_prefix:
@@ -46,6 +50,8 @@ jobs:
           TF_VAR_prefix: ${{ inputs.TF_VAR_PREFIX }}
           TF_VAR_env: ${{ inputs.TF_VAR_ENV }}
           TF_VAR_location: ${{ inputs.TF_VAR_LOCATION }}
+          TF_VAR_administrator_login: ${{ secrets.TF_VAR_ADMINISTRATOR_LOGIN }}
+          TF_VAR_administrator_login_password: ${{ secrets.TF_VAR_ADMINISTRATOR_LOGIN_PASSWORD }}
         run: |
           terraform init
           terraform plan
@@ -59,6 +65,8 @@ jobs:
           TF_VAR_prefix: ${{ inputs.TF_VAR_PREFIX }}
           TF_VAR_env: ${{ inputs.TF_VAR_ENV }}
           TF_VAR_location: ${{ inputs.TF_VAR_LOCATION }}
+          TF_VAR_administrator_login: ${{ secrets.TF_VAR_ADMINISTRATOR_LOGIN }}
+          TF_VAR_administrator_login_password: ${{ secrets.TF_VAR_ADMINISTRATOR_LOGIN_PASSWORD }}
         run: |
           terraform init
           terraform plan
