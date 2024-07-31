@@ -80,12 +80,12 @@ module "storage_account" {
 }
 
 module "sql_database" {
-  depends_on                   = [module.rg]
-  source                       = "../modules/sql-database"
-  prefix                       = var.prefix
-  location                     = var.location
-  env                          = var.env
-  rg_name                      = module.rg.rg.name
-  administrator_login          = var.administrator_login
-  administrator_login_password = var.administrator_login_password
+  depends_on             = [module.rg]
+  source                 = "../modules/sql-database"
+  prefix                 = var.prefix
+  location               = var.location
+  env                    = var.env
+  rg_name                = module.rg.rg.name
+  administrator_login    = var.administrator_login
+  administrator_password = var.administrator_password
 }
