@@ -12,14 +12,16 @@ resource "azurerm_postgresql_flexible_server" "pg_flexlible_server" {
   version      = "12"
 
   high_availability {
-    mode = "SameZone"
+    mode                      = "SameZone"
   }
 
   lifecycle {
     ignore_changes = [
       storage_mb,
       administrator_login,
-      administrator_password
+      administrator_password,
+      zone,
+      high_availability[0].standby_availability_zone
     ]
   }
 }
