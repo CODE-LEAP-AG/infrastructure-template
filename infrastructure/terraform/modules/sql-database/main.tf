@@ -6,18 +6,18 @@ resource "azurerm_postgresql_flexible_server" "pg_flexlible_server" {
   administrator_login    = var.administrator_login
   administrator_password = var.administrator_password
 
-  sku_name     = "Standard_B1ms" # Minimal cost SKU
-  storage_mb   = 32768           # Minimum storage size
-  storage_tier = "Standard"      # Standard storage tier
+  sku_name     = "GP_Standard_D4s_v3"
+  storage_mb   = 32768
+  storage_tier = "P4"
   version      = "12"
 
   high_availability {
-    mode = "Disabled"
+    mode = "SameZone"
   }
 
   lifecycle {
     ignore_changes = [
-      storage_profile,
+      storage_mb,
       administrator_login,
       administrator_password
     ]
@@ -25,10 +25,10 @@ resource "azurerm_postgresql_flexible_server" "pg_flexlible_server" {
 }
 
 resource "azurerm_postgresql_database" "pg_database" {
-  depends_on = [azurerm_postgresql_flexible_server.pg_flexlible_server]
-  name = "${var.prefix}${var.env}pgdatabase"
+  depends_on          = [azurerm_postgresql_flexible_server.pg_flexlible_server]
+  name                = "${var.prefix}${var.env}pgdatabase"
   resource_group_name = var.rg_name
-  server_name = azurerm_postgresql_flexible_server.pg_flexlible_server.name
-  charset = "UTF8"
-  collation = "English_United States.1252"
+  server_name         = azurerm_postgresql_flexible_server.pg_flexlible_server.name
+  charset             = "UTF8"
+  collation           = "English_United States.1252"
 }
