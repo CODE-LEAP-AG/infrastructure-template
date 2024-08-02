@@ -22,6 +22,9 @@ on:
       project:
         required: true
         type: string
+      namespace:
+        required: true
+        type: string
 
 jobs:
   build:
@@ -77,6 +80,6 @@ jobs:
       - name: Install Helm
         uses: azure/setup-helm@v4
       - name: Apply Helm chart
-        run: helm upgrade --install ${{ inputs.project }} . --set image.tag="${{ github.event.number }}" --set image.repository="${{ inputs.acr }}.azurecr.io/${{ inputs.project }}"
+        run: helm upgrade --install ${{ inputs.project }} . -n ${{ inputs.namespace }} --set image.tag="${{ github.event.number }}" --set image.repository="${{ inputs.acr }}.azurecr.io/${{ inputs.project }}"
         working-directory: ${{ github.workspace }}/infrastructure/helm-chart/${{ inputs.project }}
  

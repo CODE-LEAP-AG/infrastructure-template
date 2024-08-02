@@ -1,9 +1,9 @@
-name: "PR to Main"
+name: "Open Pull Request to branch Dev"
 
 on:
   pull_request:
     branches:
-      - main
+      - dev
 
 jobs:
   determine-actions:
@@ -20,18 +20,15 @@ jobs:
               - 'backend/**'
             frontend:
               - 'frontend/**'
-            infrastructure:
-              - 'infrastructure/**'
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
-      infrastructure: ${{ steps.filter.outputs.infrastructure }}
 
-  # INFRASTRUCTURE ----------------------------------------------------
+  # PROVISION CORE & PREVIEW INFRASTRUCTURE ----------------------------------------------------
+  # ALWAYS RUN IN PREVIEW MODE
   provision-infrastructure:
     needs: determine-actions
     uses: "./.github/workflows/rw-provision-infrastructure.yml"
-    if: ${{ needs.determine-actions.outputs.infrastructure == 'true' }}
     permissions:
       contents: read
       id-token: write
@@ -43,8 +40,9 @@ jobs:
       TF_VAR_administrator_password: ${{ secrets.TF_VAR_ADMINISTRATOR_PASSWORD }}
     with:
       TF_VAR_prefix: ${{ vars.TF_VAR_PREFIX }}
-      TF_VAR_env: ${{ vars.TF_VAR_ENV }}
       TF_VAR_location: ${{ vars.TF_VAR_LOCATION }}
+      run-core: true
+      run-preview: true
 
   # FRONTEND ---------------------------------------------------------
   frontend:
@@ -52,7 +50,7 @@ jobs:
     # Condition: Run either when
     # - provision-infrastructure job is skipped AND frontend is changed
     # - frontend is changed
-    if: (always() && needs.provision-infrastructure.result == 'skipped' && needs.determine-actions.outputs.frontend=='true' ) || needs.determine-actions.outputs.frontend == 'true'
+    if: needs.determine-actions.outputs.frontend == 'true'
     uses: "./.github/workflows/rw-all-in-one.yml"
     permissions:
       contents: read
@@ -66,6 +64,7 @@ jobs:
       cluster-name: ${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}aks
       resource-group-name: ${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}rg
       project: frontend
+      namespace: preview-${{ github.event.number }}
 
   # BACKEND ---------------------------------------------------------
   backend:
@@ -73,7 +72,7 @@ jobs:
     # Condition: Run either when
     # - provision-infrastructure job is skipped AND backend is changed
     # - backend is changed
-    if: (always() && needs.provision-infrastructure.result == 'skipped' && needs.determine-actions.outputs.backend=='true' ) || needs.determine-actions.outputs.backend == 'true'
+    if: needs.determine-actions.outputs.backend == 'true'
     uses: "./.github/workflows/rw-all-in-one.yml"
     permissions:
       contents: read
@@ -87,3 +86,4 @@ jobs:
       cluster-name: ${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}aks
       resource-group-name: ${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}rg
       project: backend
+      namespace: preview-${{ github.event.number }}
