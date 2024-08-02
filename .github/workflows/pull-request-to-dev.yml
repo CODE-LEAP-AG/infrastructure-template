@@ -41,4 +41,3 @@ jobs:
     with:
       TF_VAR_prefix: ${{ vars.TF_VAR_PREFIX }}
       TF_VAR_location: ${{ vars.TF_VAR_LOCATION }}
-      run-preview: true
