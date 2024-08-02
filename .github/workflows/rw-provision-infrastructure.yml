@@ -86,4 +86,4 @@ jobs:
       - name: Update kube-config
         run: az aks get-credentials --resource-group "${{ inputs.TF_VAR_prefix }}rg" --name "${{inputs.TF_VAR_prefix}}aks" --overwrite-existing
       - name: Create preview namespace
-        run: kubectl create namespace preview-${{ github.event.id }}
+        run: kubectl create namespace preview-${{ github.event.number }}
