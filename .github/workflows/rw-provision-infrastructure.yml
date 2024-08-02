@@ -71,7 +71,6 @@ jobs:
         with:
           terraform_wrapper: false
       - name: Provision Preview infrastructure
-        if: ${{ inputs.run-preview == 'true' }}
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
