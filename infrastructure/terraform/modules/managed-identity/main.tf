@@ -1,12 +1,12 @@
 // RESOURCE-GROUP MC_: MANAGED BY AKS
 data "azurerm_resource_group" "MC_demsyprodrg_demsyprodaks_germanywestcentral" {
-  name = "MC_${var.prefix}${var.env}rg_${var.cluster_name}_${var.location}"
+  name = "MC_${var.prefix}rg_${var.cluster_name}_${var.location}"
 }
 
 // IDENTITY FOR APPGW: MANAGED BY RESOURCE-GROUP MC_
 data "azurerm_user_assigned_identity" "ingressapplicationgateway" {
   resource_group_name = data.azurerm_resource_group.MC_demsyprodrg_demsyprodaks_germanywestcentral.name
-  name                = "ingressapplicationgateway-${var.prefix}${var.env}aks"
+  name                = "ingressapplicationgateway-${var.prefix}aks"
 }
 resource "azurerm_role_assignment" "ingressapplicationgateway_contributor_rg" {
   scope                = var.rg_id
@@ -34,7 +34,7 @@ resource "azurerm_role_assignment" "aks_push_acr" {
 // IDENTITY FOR AGENT POOL: MANAGED BY RESOURCE-GROUP MC_
 data "azurerm_user_assigned_identity" "agentpool" {
   resource_group_name = data.azurerm_resource_group.MC_demsyprodrg_demsyprodaks_germanywestcentral.name
-  name                = "${var.prefix}${var.env}aks-agentpool"
+  name                = "${var.prefix}aks-agentpool"
 }
 resource "azurerm_role_assignment" "agentpool_push_acr" {
   scope                = var.acr_id
