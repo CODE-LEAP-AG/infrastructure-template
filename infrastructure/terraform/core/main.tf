@@ -2,7 +2,6 @@ module "rg" {
   source   = "../modules/resource-group"
   prefix   = var.prefix
   location = var.location
-  env      = var.env
 }
 
 module "network" {
@@ -10,7 +9,6 @@ module "network" {
   source     = "../modules/network"
   prefix     = var.prefix
   location   = var.location
-  env        = var.env
   rg_name    = module.rg.rg.name
 }
 
@@ -18,7 +16,6 @@ module "appgw" {
   depends_on      = [module.network]
   source          = "../modules/application-gateway"
   rg_name         = module.rg.rg.name
-  env             = var.env
   location        = var.location
   prefix          = var.prefix
   appgw_subnet_id = module.network.appgw_subnet.id
@@ -28,7 +25,6 @@ module "container_registry" {
   depends_on = [module.rg]
   source     = "../modules/container-registry"
   prefix     = var.prefix
-  env        = var.env
   location   = var.location
   rg_name    = module.rg.rg.name
 }
@@ -39,7 +35,6 @@ module "aks" {
   prefix              = var.prefix
   location            = var.location
   rg_name             = module.rg.rg.name
-  env                 = var.env
   vm_size             = "Standard_D2s_v3"
   syspool_node_count  = "1"
   syspool_min_count   = "1"
@@ -56,7 +51,6 @@ module "managed_identity" {
   depends_on                = [module.aks, module.container_registry]
   source                    = "../modules/managed-identity"
   prefix                    = var.prefix
-  env                       = var.env
   location                  = var.location
   cluster_name              = module.aks.aks.name
   rg_id                     = module.rg.rg.id
@@ -71,7 +65,6 @@ module "storage_account" {
   source                = "../modules/storage-account"
   prefix                = var.prefix
   location              = var.location
-  env                   = var.env
   rg_name               = module.rg.rg.name
   fs_name_debezium_conf = "conf"
   fs_name_debezium_data = "data"
@@ -84,7 +77,6 @@ module "sql_database" {
   source                 = "../modules/sql-database"
   prefix                 = var.prefix
   location               = var.location
-  env                    = var.env
   rg_name                = module.rg.rg.name
   administrator_login    = var.administrator_login
   administrator_password = var.administrator_password

@@ -1,6 +1,5 @@
 // MODULE: RESOURCE GROUP
 prefix   = ""
-env      = ""
 location = ""
 
 // MODULE: VNET
