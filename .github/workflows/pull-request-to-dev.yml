@@ -1,0 +1,44 @@
+name: "PR to Dev"
+
+on:
+  pull_request:
+    branches:
+      - dev
+
+jobs:
+  determine-actions:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      # For pull requests it's not necessary to checkout the code
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            frontend:
+              - 'frontend/**'
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+
+  # PROVISION CORE & PREVIEW INFRASTRUCTURE ----------------------------------------------------
+  # ALWAYS RUN IN PREVIEW MODE
+  provision-infrastructure:
+    needs: determine-actions
+    uses: "./.github/workflows/rw-provision-infrastructure.yml"
+    permissions:
+      contents: read
+      id-token: write
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      TF_VAR_administrator_login: ${{ secrets.TF_VAR_ADMINISTRATOR_LOGIN }}
+      TF_VAR_administrator_password: ${{ secrets.TF_VAR_ADMINISTRATOR_PASSWORD }}
+    with:
+      TF_VAR_prefix: ${{ vars.TF_VAR_PREFIX }}
+      TF_VAR_location: ${{ vars.TF_VAR_LOCATION }}
+      run-preview: true
