@@ -60,9 +60,9 @@ jobs:
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
     with:
-      acr: ${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}acr
-      cluster-name: ${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}aks
-      resource-group-name: ${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}rg
+      acr: ${{ vars.TF_VAR_PREFIX }}acr
+      cluster-name: ${{ vars.TF_VAR_PREFIX }}aks
+      resource-group-name: ${{ vars.TF_VAR_PREFIX }}rg
       project: frontend
       namespace: preview-${{ github.event.number }}
 
@@ -82,8 +82,8 @@ jobs:
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
     with:
-      acr: ${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}acr
-      cluster-name: ${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}aks
-      resource-group-name: ${{ vars.TF_VAR_PREFIX }}${{ vars.TF_VAR_ENV }}rg
+      acr: ${{ vars.TF_VAR_PREFIX }}acr
+      cluster-name: ${{ vars.TF_VAR_PREFIX }}aks
+      resource-group-name: ${{ vars.TF_VAR_PREFIX }}rg
       project: backend
       namespace: preview-${{ github.event.number }}
