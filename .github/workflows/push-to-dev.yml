@@ -8,12 +8,12 @@ on:
 jobs:
   determine-actions:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
+      - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
         id: filter
         with:
+          base: ${{ github.ref }}
           filters: |
             backend:
               - 'backend/**'
