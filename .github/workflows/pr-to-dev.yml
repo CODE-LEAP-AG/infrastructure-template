@@ -11,7 +11,6 @@ jobs:
     permissions:
       pull-requests: read
     steps:
-      # For pull requests it's not necessary to checkout the code
       - uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -25,7 +24,6 @@ jobs:
       frontend: ${{ steps.filter.outputs.frontend }}
 
   # PROVISION CORE & PREVIEW INFRASTRUCTURE ----------------------------------------------------
-  # ALWAYS RUN IN PREVIEW MODE
   provision-infrastructure:
     needs: determine-actions
     uses: "./.github/workflows/rw-provision-infrastructure.yml"
@@ -41,15 +39,14 @@ jobs:
     with:
       TF_VAR_prefix: ${{ vars.TF_VAR_PREFIX }}
       TF_VAR_location: ${{ vars.TF_VAR_LOCATION }}
+      # Provision core infra
       run-core: true
+      # Provision preview infra
       run-preview: true
 
-  # FRONTEND ---------------------------------------------------------
+  # FRONTEND ------------------------------------------------------------------------------------
   frontend:
     needs: [provision-infrastructure, determine-actions]
-    # Condition: Run either when
-    # - provision-infrastructure job is skipped AND frontend is changed
-    # - frontend is changed
     if: needs.determine-actions.outputs.frontend == 'true'
     uses: "./.github/workflows/rw-all-in-one.yml"
     permissions:
@@ -66,12 +63,9 @@ jobs:
       project: frontend
       namespace: preview-${{ github.event.number }}
 
-  # BACKEND ---------------------------------------------------------
+  # BACKEND ------------------------------------------------------------------------------------
   backend:
     needs: [provision-infrastructure, determine-actions]
-    # Condition: Run either when
-    # - provision-infrastructure job is skipped AND backend is changed
-    # - backend is changed
     if: needs.determine-actions.outputs.backend == 'true'
     uses: "./.github/workflows/rw-all-in-one.yml"
     permissions:

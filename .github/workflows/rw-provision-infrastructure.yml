@@ -27,11 +27,15 @@ on:
       run-preview:
         required: true
         type: boolean
+      destroy-preview:
+        required: true
+        type: boolean
 
 jobs:
   run:
     runs-on: ubuntu-latest
     steps:
+      # DEPENDENCIES --------------------------------------------------------------------------------
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Azure CLI login
@@ -44,6 +48,14 @@ jobs:
         uses: hashicorp/setup-terraform@v3.1.1
         with:
           terraform_wrapper: false
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+      - name: Update Kubeconfig
+        uses: azure/aks-set-context@v4
+        with:
+          cluster-name: ${{ inputs.TF_VAR_PREFIX }}aks
+          resource-group: ${{ inputs.TF_VAR_PREFIX }}rg
+      # CORE INFRASTRUCTURE --------------------------------------------------------------------------
       - name: Provision Core infrastructure
         if: ${{ inputs.run-core == true }}
         env:
@@ -59,8 +71,24 @@ jobs:
           terraform plan
           terraform apply --auto-approve
         working-directory: ${{ github.workspace }}/infrastructure/terraform/core
+      # PREVIEW INFRASTRUCTURE ------------------------------------------------------------------------
       - name: Provision Preview infrastructure
         if: ${{ inputs.run-preview == true }}
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          TF_VAR_prefix: ${{ inputs.TF_VAR_PREFIX }}
+          TF_VAR_location: ${{ inputs.TF_VAR_LOCATION }}
+        run: |
+          terraform init --backend-config="key=preview-${{ github.event.number }}.tfstate"
+          terraform plan
+          terraform apply --auto-approve
+          kubectl create namespace preview-${{ github.event.number }} || true
+        working-directory: ${{ github.workspace }}/infrastructure/terraform/preview
+      # DESTROY PREVIEW HELM AND INFRASTRUCTURE --------------------------------------------------------------
+      - name: Destroy Preview infrastructure
+        if: ${{ inputs.destroy-preview == true }}
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}

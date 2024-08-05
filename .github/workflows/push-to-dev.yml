@@ -11,7 +11,6 @@ jobs:
     permissions:
       pull-requests: read
     steps:
-      # For pull requests it's not necessary to checkout the code
       - uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -25,7 +24,6 @@ jobs:
       frontend: ${{ steps.filter.outputs.frontend }}
 
   # PROVISION CORE & PREVIEW INFRASTRUCTURE ----------------------------------------------------
-  # ALWAYS RUN IN PREVIEW MODE
   provision-infrastructure:
     needs: determine-actions
     uses: "./.github/workflows/rw-provision-infrastructure.yml"
@@ -42,4 +40,43 @@ jobs:
       TF_VAR_prefix: ${{ vars.TF_VAR_PREFIX }}
       TF_VAR_location: ${{ vars.TF_VAR_LOCATION }}
       run-core: true
-      run-preview: true
+      run-preview: false
+      destroy-preview: true
+
+  # FRONTEND ------------------------------------------------------------------------------------
+  frontend:
+    needs: [provision-infrastructure, determine-actions]
+    if: needs.determine-actions.outputs.frontend == 'true'
+    uses: "./.github/workflows/rw-all-in-one.yml"
+    permissions:
+      contents: read
+      id-token: write
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+    with:
+      acr: ${{ vars.TF_VAR_PREFIX }}acr
+      cluster-name: ${{ vars.TF_VAR_PREFIX }}aks
+      resource-group-name: ${{ vars.TF_VAR_PREFIX }}rg
+      project: frontend
+      namespace: dev
+  
+# BACKEND ------------------------------------------------------------------------------------
+  backend:
+    needs: [provision-infrastructure, determine-actions]
+    if: needs.determine-actions.outputs.backend == 'true'
+    uses: "./.github/workflows/rw-all-in-one.yml"
+    permissions:
+      contents: read
+      id-token: write
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+    with:
+      acr: ${{ vars.TF_VAR_PREFIX }}acr
+      cluster-name: ${{ vars.TF_VAR_PREFIX }}aks
+      resource-group-name: ${{ vars.TF_VAR_PREFIX }}rg
+      project: backend
+      namespace: dev
