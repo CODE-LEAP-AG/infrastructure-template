@@ -27,9 +27,6 @@ on:
       run-preview:
         required: true
         type: boolean
-      destroy-preview:
-        required: true
-        type: boolean
 
 jobs:
   run:

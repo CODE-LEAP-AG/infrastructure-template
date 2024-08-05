@@ -1,0 +1,67 @@
+name: "Destroy Preview Helm and Infra"
+
+on:
+  workflow_call:
+    secrets:
+      AZURE_CLIENT_ID:
+        required: true
+      AZURE_SUBSCRIPTION_ID:
+        required: true
+      AZURE_TENANT_ID:
+        required: true
+
+    inputs:
+      TF_VAR_prefix: 
+        required: true
+        type: string
+      TF_VAR_LOCATION:
+        required: true
+        type: string
+      cluster-name: 
+        required: true
+        type: string
+      resource-group-name:
+        required: true
+        type: string
+      project:
+        required: false
+        type: string
+
+jobs:
+  destroy-preview:
+    runs-on: ubuntu-latest
+    steps:
+      # Dependencies -----------------------------------------------------------------------------
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Azure CLI login
+        uses: azure/login@v2.1.1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3.1.1
+        with:
+          terraform_wrapper: false
+      # Destroy Helm deployment -------------------------------------------------------------------
+      - name: Destroy Helm chart
+        run: |
+          az aks get-credentials --resource-group "${{ inputs.resource-group-name }}" --name "${{ inputs.cluster-name }}" --overwrite-existing
+          helm uninstall ${{ inputs.project }} -n preview-${{ github.event.number }}
+        working-directory: ${{ github.workspace }}/infrastructure/helm-chart/${{ inputs.project }}
+      # Destroy Preview infra --------------------------------------------------------------------
+      - name: Destroy Preview infrastructure
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          TF_VAR_prefix: ${{ inputs.TF_VAR_PREFIX }}
+          TF_VAR_location: ${{ inputs.TF_VAR_LOCATION }}
+        run: |
+          terraform init --backend-config="key=preview-${{ github.event.number }}.tfstate"
+          terraform plan
+          terraform destroy --auto-approve
+        working-directory: ${{ github.workspace }}/infrastructure/terraform/preview

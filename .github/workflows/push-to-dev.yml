@@ -41,7 +41,6 @@ jobs:
       TF_VAR_location: ${{ vars.TF_VAR_LOCATION }}
       run-core: true
       run-preview: false
-      destroy-preview: true
 
   # FRONTEND ------------------------------------------------------------------------------------
   frontend:

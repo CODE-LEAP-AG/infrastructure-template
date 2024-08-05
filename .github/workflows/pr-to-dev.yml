@@ -43,8 +43,6 @@ jobs:
       run-core: true
       # Provision preview infra
       run-preview: true
-      # Do not destroy preview infra yet
-      destroy-preview: false
 
   # FRONTEND ------------------------------------------------------------------------------------
   frontend:
