@@ -22,17 +22,22 @@ on:
       project:
         required: true
         type: string
+      namespace:
+        required: true
+        type: string
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # Dependencies -------------------------------------------
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Install Node 20
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+      # Build and test React app -------------------------------
       - name: Build and Test React app
         run: |
           npm install
@@ -44,6 +49,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      # Dependencies -------------------------------------------
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Azure CLI login
@@ -54,6 +60,7 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
       - name: Login to ACR
         run: az acr login --name "${{ inputs.acr }}"
+      # Build and push Docker image -----------------------------
       - name: Build and push Docker image
         run: |
           docker build -t "${{ inputs.acr }}.azurecr.io/${{ inputs.project }}:${{ github.event.number }}" .
@@ -64,6 +71,7 @@ jobs:
     needs: release
     runs-on: ubuntu-latest
     steps:
+      # Dependencies -------------------------------------------
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Azure CLI login
@@ -72,11 +80,12 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-      - name: Update kube-config
-        run: az aks get-credentials --resource-group "${{ inputs.resource-group-name }}" --name "${{ inputs.cluster-name }}"
       - name: Install Helm
         uses: azure/setup-helm@v4
+      # Apply Helm chart ---------------------------------------
       - name: Apply Helm chart
-        run: helm upgrade --install ${{ inputs.project }} . --set image.tag="${{ github.event.number }}" --set image.repository="${{ inputs.acr }}.azurecr.io/${{ inputs.project }}"
+        run: |
+          az aks get-credentials --resource-group "${{ inputs.resource-group-name }}" --name "${{ inputs.cluster-name }}" --overwrite-existing
+          helm upgrade --install ${{ inputs.project }} . -n ${{ inputs.namespace }} --set image.tag="${{ github.event.number }}" --set image.repository="${{ inputs.acr }}.azurecr.io/${{ inputs.project }}"
         working-directory: ${{ github.workspace }}/infrastructure/helm-chart/${{ inputs.project }}
  

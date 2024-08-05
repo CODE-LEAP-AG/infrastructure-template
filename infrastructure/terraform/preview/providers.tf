@@ -14,8 +14,7 @@ terraform {
   backend "azurerm" {
     resource_group_name  = "demsytestrg"
     storage_account_name = "demsytest2507"
-    container_name       = "ops"
-    key                  = "terraform.tfstate"
+    container_name       = "terraform-backend"
     use_oidc             = true
   }
 }
