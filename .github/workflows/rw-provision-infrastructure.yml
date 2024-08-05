@@ -50,11 +50,6 @@ jobs:
           terraform_wrapper: false
       - name: Install Helm
         uses: azure/setup-helm@v4
-      - name: Update Kubeconfig
-        uses: azure/aks-set-context@v4
-        with:
-          cluster-name: ${{ inputs.TF_VAR_PREFIX }}aks
-          resource-group: ${{ inputs.TF_VAR_PREFIX }}rg
       # CORE INFRASTRUCTURE --------------------------------------------------------------------------
       - name: Provision Core infrastructure
         if: ${{ inputs.run-core == true }}
@@ -84,6 +79,7 @@ jobs:
           terraform init --backend-config="key=preview-${{ github.event.number }}.tfstate"
           terraform plan
           terraform apply --auto-approve
+          az aks get-credentials --resource-group "${{ inputs.TF_VAR_PREFIX }}rg" --name "${{inputs.TF_VAR_PREFIX}}aks" --overwrite-existing
           kubectl create namespace preview-${{ github.event.number }} || true
         working-directory: ${{ github.workspace }}/infrastructure/terraform/preview
       # DESTROY PREVIEW HELM AND INFRASTRUCTURE --------------------------------------------------------------
