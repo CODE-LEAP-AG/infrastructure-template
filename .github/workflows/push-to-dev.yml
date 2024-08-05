@@ -9,7 +9,7 @@ jobs:
   determine-actions:
     runs-on: ubuntu-latest
     permissions:
-      pull-requests: read
+      contents: read
     steps:
       - uses: dorny/paths-filter@v3
         id: filter
