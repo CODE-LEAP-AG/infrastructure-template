@@ -48,6 +48,7 @@ jobs:
       run-build: true
       run-test: true
       run-release: true
+      environment: dev
 
   # BACKEND ------------------------------------------------------------------------------------
   backend:
@@ -70,3 +71,4 @@ jobs:
       run-build: true
       run-test: true
       run-release: true
+      environment: dev
