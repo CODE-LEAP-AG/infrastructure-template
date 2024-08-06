@@ -121,6 +121,7 @@ jobs:
       - name: Apply Helm chart
         run: |
           az aks get-credentials --resource-group "${{ inputs.resource-group-name }}" --name "${{ inputs.cluster-name }}" --overwrite-existing
+          kubectl create ns ${{ inputs.environment }} || true
           helm upgrade --install ${{ inputs.project }} . -n ${{ inputs.environment }} --set image.tag="${{ inputs.environment }}-${{ github.event.number }}" --set image.repository="${{ inputs.acr }}.azurecr.io/${{ inputs.project }}"
         working-directory: ${{ github.workspace }}/infrastructure/helm-chart/${{ inputs.project }}
  
