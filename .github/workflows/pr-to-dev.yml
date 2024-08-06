@@ -23,32 +23,11 @@ jobs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
 
-  # PROVISION CORE & PREVIEW INFRASTRUCTURE ----------------------------------------------------
-  provision-infrastructure:
-    needs: determine-actions
-    uses: "./.github/workflows/rw-provision-infrastructure.yml"
-    permissions:
-      contents: read
-      id-token: write
-    secrets:
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      TF_VAR_administrator_login: ${{ secrets.TF_VAR_ADMINISTRATOR_LOGIN }}
-      TF_VAR_administrator_password: ${{ secrets.TF_VAR_ADMINISTRATOR_PASSWORD }}
-    with:
-      TF_VAR_prefix: ${{ vars.TF_VAR_PREFIX }}
-      TF_VAR_location: ${{ vars.TF_VAR_LOCATION }}
-      # Provision core infra
-      run-core: true
-      # Provision preview infra
-      run-preview: true
-
   # FRONTEND ------------------------------------------------------------------------------------
   frontend:
-    needs: [provision-infrastructure, determine-actions]
+    needs: determine-actions
     if: needs.determine-actions.outputs.frontend == 'true'
-    uses: "./.github/workflows/rw-all-in-one.yml"
+    uses: "./.github/workflows/rw-deploy-app.yml"
     permissions:
       contents: read
       id-token: write
@@ -61,13 +40,15 @@ jobs:
       cluster-name: ${{ vars.TF_VAR_PREFIX }}aks
       resource-group-name: ${{ vars.TF_VAR_PREFIX }}rg
       project: frontend
-      namespace: preview-${{ github.event.number }}
+      # build and test only
+      run-build: true
+      run-test: true
 
   # BACKEND ------------------------------------------------------------------------------------
   backend:
-    needs: [provision-infrastructure, determine-actions]
+    needs: determine-actions
     if: needs.determine-actions.outputs.backend == 'true'
-    uses: "./.github/workflows/rw-all-in-one.yml"
+    uses: "./.github/workflows/rw-deploy-app.yml"
     permissions:
       contents: read
       id-token: write
@@ -80,4 +61,6 @@ jobs:
       cluster-name: ${{ vars.TF_VAR_PREFIX }}aks
       resource-group-name: ${{ vars.TF_VAR_PREFIX }}rg
       project: backend
-      namespace: preview-${{ github.event.number }}
+      # build and test only
+      run-build: true
+      run-test: true

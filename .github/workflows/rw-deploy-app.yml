@@ -1,4 +1,4 @@
-name: "rw-all-in-one"
+name: "RW - Build, Test, Release, Deploy"
 
 on:
   workflow_call:
@@ -22,12 +22,45 @@ on:
       project:
         required: true
         type: string
-      namespace:
-        required: true
+      run-build:
+        required: false
+        type: boolean
+      run-test:
+        required: false
+        type: boolean
+      run-release:
+        required: false
+        type: boolean
+      run-deploy:
+        required: false
+        type: boolean
+      environment:
+        required: false
         type: string
 
 jobs:
   build:
+    if: ${{ inputs.run-build == true }}
+    runs-on: ubuntu-latest
+    steps:
+      # Dependencies -------------------------------------------
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      # Build and test React app -------------------------------
+      - name: Build and Test React app
+        run: |
+          npm install
+          npm run build
+          npm test
+        working-directory: ${{ github.workspace }}/${{ inputs.project }}
+
+  test:
+    needs: build
+    if: ${{ inputs.run-test == true }}
     runs-on: ubuntu-latest
     steps:
       # Dependencies -------------------------------------------
@@ -46,7 +79,8 @@ jobs:
         working-directory: ${{ github.workspace }}/${{ inputs.project }}
 
   release:
-    needs: build
+    needs: test
+    if: ${{ inputs.run-release == true }}
     runs-on: ubuntu-latest
     steps:
       # Dependencies -------------------------------------------
@@ -63,12 +97,13 @@ jobs:
       # Build and push Docker image -----------------------------
       - name: Build and push Docker image
         run: |
-          docker build -t "${{ inputs.acr }}.azurecr.io/${{ inputs.project }}:${{ github.event.number }}" .
-          docker push "${{ inputs.acr }}.azurecr.io/${{ inputs.project }}:${{ github.event.number }}"
+          docker build -t "${{ inputs.acr }}.azurecr.io/${{ inputs.project }}:${{ inputs.environment }}-${{ github.event.number }}" .
+          docker push "${{ inputs.acr }}.azurecr.io/${{ inputs.project }}:${{ inputs.environment }}-${{ github.event.number }}"
         working-directory: ${{ github.workspace }}/${{ inputs.project }}
   
   deploy:
     needs: release
+    if: ${{ inputs.run-deploy == true }}
     runs-on: ubuntu-latest
     steps:
       # Dependencies -------------------------------------------
@@ -86,6 +121,6 @@ jobs:
       - name: Apply Helm chart
         run: |
           az aks get-credentials --resource-group "${{ inputs.resource-group-name }}" --name "${{ inputs.cluster-name }}" --overwrite-existing
-          helm upgrade --install ${{ inputs.project }} . -n ${{ inputs.namespace }} --set image.tag="${{ github.event.number }}" --set image.repository="${{ inputs.acr }}.azurecr.io/${{ inputs.project }}"
+          helm upgrade --install ${{ inputs.project }} . -n ${{ inputs.environment }} --set image.tag="${{ inputs.environment }}-${{ github.event.number }}" --set image.repository="${{ inputs.acr }}.azurecr.io/${{ inputs.project }}"
         working-directory: ${{ github.workspace }}/infrastructure/helm-chart/${{ inputs.project }}
  
