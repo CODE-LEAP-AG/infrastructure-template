@@ -17,6 +17,8 @@ jobs:
     permissions:
       contents: read
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: Determine folder changes
         uses: dorny/paths-filter@v3
         id: filter
