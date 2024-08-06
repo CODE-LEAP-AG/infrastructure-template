@@ -11,12 +11,13 @@ jobs:
   determine-actions:
     runs-on: ubuntu-latest
     permissions:
-      pull-requests: read
+      contents: read
     steps:
       - name: Determine folder changes
         uses: dorny/paths-filter@v3
         id: filter
         with:
+          base: ${{ github.ref }}
           filters: |
             backend:
               - 'backend/**'
