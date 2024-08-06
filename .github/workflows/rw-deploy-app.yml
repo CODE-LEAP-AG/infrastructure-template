@@ -97,8 +97,8 @@ jobs:
       # Build and push Docker image -----------------------------
       - name: Build and push Docker image
         run: |
-          docker build -t "${{ inputs.acr }}.azurecr.io/${{ inputs.project }}:${{ inputs.environment }}-${{ github.event.number }}" .
-          docker push "${{ inputs.acr }}.azurecr.io/${{ inputs.project }}:${{ inputs.environment }}-${{ github.event.number }}"
+          docker build -t "${{ inputs.acr }}.azurecr.io/${{ inputs.project }}:${{ inputs.environment }}-1" .
+          docker push "${{ inputs.acr }}.azurecr.io/${{ inputs.project }}:${{ inputs.environment }}-1"
         working-directory: ${{ github.workspace }}/${{ inputs.project }}
   
   deploy:
