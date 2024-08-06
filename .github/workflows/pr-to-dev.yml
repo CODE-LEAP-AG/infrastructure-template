@@ -1,0 +1,70 @@
+name: "Open Pull Request to branch Dev"
+
+on:
+  pull_request:
+    branches:
+      - dev
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  determine-actions:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            frontend:
+              - 'frontend/**'
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+
+  # FRONTEND ------------------------------------------------------------------------------------
+  frontend:
+    needs: determine-actions
+    if: needs.determine-actions.outputs.frontend == 'true'
+    uses: "./.github/workflows/rw-deploy-app.yml"
+    permissions:
+      contents: read
+      id-token: write
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+    with:
+      acr: ${{ vars.TF_VAR_PREFIX }}acr
+      cluster-name: ${{ vars.TF_VAR_PREFIX }}aks
+      resource-group-name: ${{ vars.TF_VAR_PREFIX }}rg
+      project: frontend
+      # build and test only
+      run-build: true
+      run-test: true
+
+  # BACKEND ------------------------------------------------------------------------------------
+  backend:
+    needs: determine-actions
+    if: needs.determine-actions.outputs.backend == 'true'
+    uses: "./.github/workflows/rw-deploy-app.yml"
+    permissions:
+      contents: read
+      id-token: write
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+    with:
+      acr: ${{ vars.TF_VAR_PREFIX }}acr
+      cluster-name: ${{ vars.TF_VAR_PREFIX }}aks
+      resource-group-name: ${{ vars.TF_VAR_PREFIX }}rg
+      project: backend
+      # build and test only
+      run-build: true
+      run-test: true

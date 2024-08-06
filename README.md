@@ -22,7 +22,7 @@ It can also by used as a reference for initialization stage to start a project m
 │   └── terraform/
 │       ├── core/
 │       ├── modules/
-│       └── ops/
+│       └── preview/
 ├── backend/
 ├── frontend/
 └── README.md

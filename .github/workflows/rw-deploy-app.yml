@@ -1,0 +1,127 @@
+name: "RW - Build, Test, Release, Deploy"
+
+on:
+  workflow_call:
+    secrets:
+      AZURE_CLIENT_ID:
+        required: true
+      AZURE_SUBSCRIPTION_ID:
+        required: true
+      AZURE_TENANT_ID:
+        required: true
+    inputs:
+      acr:
+        required: true
+        type: string
+      cluster-name:
+        required: true
+        type: string
+      resource-group-name:
+        required: true
+        type: string
+      project:
+        required: true
+        type: string
+      run-build:
+        required: false
+        type: boolean
+      run-test:
+        required: false
+        type: boolean
+      run-release:
+        required: false
+        type: boolean
+      run-deploy:
+        required: false
+        type: boolean
+      environment:
+        required: false
+        type: string
+
+jobs:
+  build:
+    if: ${{ inputs.run-build == true }}
+    runs-on: ubuntu-latest
+    steps:
+      # Dependencies -------------------------------------------
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      # Build and test React app -------------------------------
+      - name: Build and Test React app
+        run: |
+          npm install
+          npm run build
+          npm test
+        working-directory: ${{ github.workspace }}/${{ inputs.project }}
+
+  test:
+    needs: build
+    if: ${{ inputs.run-test == true }}
+    runs-on: ubuntu-latest
+    steps:
+      # Dependencies -------------------------------------------
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      # Build and test React app -------------------------------
+      - name: Build and Test React app
+        run: |
+          npm install
+          npm run build
+          npm test
+        working-directory: ${{ github.workspace }}/${{ inputs.project }}
+
+  release:
+    needs: test
+    if: ${{ inputs.run-release == true }}
+    runs-on: ubuntu-latest
+    steps:
+      # Dependencies -------------------------------------------
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Azure CLI login
+        uses: azure/login@v2.1.1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+      - name: Login to ACR
+        run: az acr login --name "${{ inputs.acr }}"
+      # Build and push Docker image -----------------------------
+      - name: Build and push Docker image
+        run: |
+          docker build -t "${{ inputs.acr }}.azurecr.io/${{ inputs.project }}:${{ inputs.environment }}-${{ github.event.number }}" .
+          docker push "${{ inputs.acr }}.azurecr.io/${{ inputs.project }}:${{ inputs.environment }}-${{ github.event.number }}"
+        working-directory: ${{ github.workspace }}/${{ inputs.project }}
+  
+  deploy:
+    needs: release
+    if: ${{ inputs.run-deploy == true }}
+    runs-on: ubuntu-latest
+    steps:
+      # Dependencies -------------------------------------------
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Azure CLI login
+        uses: azure/login@v2.1.1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+      # Apply Helm chart ---------------------------------------
+      - name: Apply Helm chart
+        run: |
+          az aks get-credentials --resource-group "${{ inputs.resource-group-name }}" --name "${{ inputs.cluster-name }}" --overwrite-existing
+          kubectl create ns ${{ inputs.environment }} || true
+          helm upgrade --install ${{ inputs.project }} . -n ${{ inputs.environment }} --set image.tag="${{ inputs.environment }}-${{ github.event.number }}" --set image.repository="${{ inputs.acr }}.azurecr.io/${{ inputs.project }}"
+        working-directory: ${{ github.workspace }}/infrastructure/helm-chart/${{ inputs.project }}
+ 

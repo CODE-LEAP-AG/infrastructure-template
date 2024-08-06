@@ -1,0 +1,115 @@
+name: "Open Pull Request to branch Dev"
+
+on:
+  push:
+    branches:
+      - dev
+      - staging
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  determine-actions:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Determine folder changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          base: ${{ github.ref }}
+          filters: |
+            infrastructure:
+              - 'infrastructure/**'
+            backend:
+              - 'backend/**'
+            frontend:
+              - 'frontend/**'
+      - name: Determine environment based on branches
+        id: determine-environment
+        run: |
+          if [[ ${{ github.ref }} == 'refs/heads/dev' ]]; then
+            echo "env=dev" >> $GITHUB_OUTPUT
+          elif [[ ${{ github.ref }} == 'refs/heads/staging' ]]; then
+            echo "env=staging" >> $GITHUB_OUTPUT
+          elif [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
+            echo "env=production" >> $GITHUB_OUTPUT
+          fi
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      environment: ${{ steps.determine-environment.outputs.env }}
+      infrastructure: ${{ steps.filter.outputs.infrastructure }}
+
+  # INFRASTRUCTURE ------------------------------------------------------------------------------
+  provision-infrastructure:
+    needs: determine-actions
+    if: needs.determine-actions.outputs.infrastructure == 'true'
+    uses: "./.github/workflows/rw-provision-infrastructure.yml"
+    permissions:
+      contents: read
+      id-token: write
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      TF_VAR_administrator_login: ${{ secrets.TF_VAR_ADMINISTRATOR_LOGIN }}
+      TF_VAR_administrator_password: ${{ secrets.TF_VAR_ADMINISTRATOR_PASSWORD }}
+    with:
+      TF_VAR_prefix: ${{ vars.TF_VAR_PREFIX }}
+      TF_VAR_location: ${{ vars.TF_VAR_LOCATION }}
+
+  # FRONTEND ------------------------------------------------------------------------------------
+  frontend:
+    needs: [determine-actions, provision-infrastructure]
+    if: (always() && needs.provision-infrastructure.result == 'skipped' && needs.determine-actions.outputs.frontend=='true' ) || needs.determine-actions.outputs.frontend == 'true'
+
+    uses: "./.github/workflows/rw-deploy-app.yml"
+    permissions:
+      contents: read
+      id-token: write
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+    with:
+      acr: ${{ vars.TF_VAR_PREFIX }}acr
+      cluster-name: ${{ vars.TF_VAR_PREFIX }}aks
+      resource-group-name: ${{ vars.TF_VAR_PREFIX }}rg
+      project: frontend
+      # build, test, release, and deploy
+      run-build: true
+      run-test: true
+      run-release: true
+      run-deploy: true
+      environment: ${{ needs.determine-actions.outputs.environment }}
+
+  # BACKEND ------------------------------------------------------------------------------------
+  backend:
+    needs: [determine-actions, provision-infrastructure]
+    if: (always() && needs.provision-infrastructure.result == 'skipped' && needs.determine-actions.outputs.backend=='true' ) || needs.determine-actions.outputs.backend == 'true'
+    uses: "./.github/workflows/rw-deploy-app.yml"
+    permissions:
+      contents: read
+      id-token: write
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+    with:
+      acr: ${{ vars.TF_VAR_PREFIX }}acr
+      cluster-name: ${{ vars.TF_VAR_PREFIX }}aks
+      resource-group-name: ${{ vars.TF_VAR_PREFIX }}rg
+      project: backend
+      # build, test, release, and deploy
+      run-build: true
+      run-test: true
+      run-release: true
+      run-deploy: true
+      environment: ${{ needs.determine-actions.outputs.environment }}

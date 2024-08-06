@@ -1,14 +1,14 @@
 resource "azurerm_public_ip" "public_ip" {
   sku                 = "Standard"
   resource_group_name = var.rg_name
-  name                = "${var.prefix}${var.env}appgwip"
+  name                = "${var.prefix}appgwip"
   location            = var.location
   allocation_method   = "Static"
 }
 
 resource "azurerm_application_gateway" "appgw" {
   resource_group_name = var.rg_name
-  name                = "${var.prefix}${var.env}appgw"
+  name                = "${var.prefix}appgw"
   location            = var.location
 
   backend_address_pool {

@@ -1,16 +1,16 @@
 // USER-ASSIGNED IDENTITY FOR AKS
 resource "azurerm_user_assigned_identity" "aks_identity" {
   resource_group_name = var.rg_name
-  name                = "${var.prefix}${var.env}aksidentity"
+  name                = "${var.prefix}aksidentity"
   location            = var.location
 }
 
 // AKS CLUSTER WITH AGIC (APPGW INGRESS CONTROLLER)
 resource "azurerm_kubernetes_cluster" "aks" {
   resource_group_name = var.rg_name
-  name                = "${var.prefix}${var.env}aks"
+  name                = "${var.prefix}aks"
   location            = var.location
-  dns_prefix          = "${var.prefix}${var.env}"
+  dns_prefix          = "${var.prefix}"
 
   default_node_pool {
     vnet_subnet_id      = var.aks_subnet_id

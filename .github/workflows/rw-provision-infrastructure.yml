@@ -18,9 +18,6 @@ on:
       TF_VAR_prefix:
         required: true
         type: string
-      TF_VAR_env:
-        required: true
-        type: string
       TF_VAR_location:
         required: true
         type: string
@@ -29,6 +26,7 @@ jobs:
   run:
     runs-on: ubuntu-latest
     steps:
+      # DEPENDENCIES --------------------------------------------------------------------------------
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Azure CLI login
@@ -41,33 +39,21 @@ jobs:
         uses: hashicorp/setup-terraform@v3.1.1
         with:
           terraform_wrapper: false
-      - name: Terraform Core
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+      # INFRASTRUCTURE --------------------------------------------------------------------------
+      - name: Provision infrastructure
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           TF_VAR_prefix: ${{ inputs.TF_VAR_PREFIX }}
-          TF_VAR_env: ${{ inputs.TF_VAR_ENV }}
           TF_VAR_location: ${{ inputs.TF_VAR_LOCATION }}
           TF_VAR_administrator_login: ${{ secrets.TF_VAR_ADMINISTRATOR_LOGIN }}
           TF_VAR_administrator_password: ${{ secrets.TF_VAR_ADMINISTRATOR_PASSWORD }}
         run: |
-          terraform init
+          terraform init --backend-config="key=terraform.tfstate"
           terraform plan
           terraform apply --auto-approve
         working-directory: ${{ github.workspace }}/infrastructure/terraform/core
-      - name: Terraform Ops
-        env:
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          TF_VAR_prefix: ${{ inputs.TF_VAR_PREFIX }}
-          TF_VAR_env: ${{ inputs.TF_VAR_ENV }}
-          TF_VAR_location: ${{ inputs.TF_VAR_LOCATION }}
-          TF_VAR_administrator_login: ${{ secrets.TF_VAR_ADMINISTRATOR_LOGIN }}
-          TF_VAR_administrator_login_password: ${{ secrets.TF_VAR_ADMINISTRATOR_LOGIN_PASSWORD }}
-        run: |
-          terraform init
-          terraform plan
-          terraform apply --auto-approve
-        working-directory: ${{ github.workspace }}/infrastructure/terraform/ops
+      
