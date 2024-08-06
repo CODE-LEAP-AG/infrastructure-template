@@ -25,6 +25,8 @@ jobs:
         with:
           base: ${{ github.ref }}
           filters: |
+            infrastructure:
+              - 'infrastructure/**'
             backend:
               - 'backend/**'
             frontend:
@@ -43,10 +45,12 @@ jobs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
       environment: ${{ steps.determine-environment.outputs.env }}
+      infrastructure: ${{ steps.filter.outputs.infrastructure }}
 
   # INFRASTRUCTURE ------------------------------------------------------------------------------
   provision-infrastructure:
     needs: determine-actions
+    if: needs.determine-actions.outputs.infrastructure == 'true'
     uses: "./.github/workflows/rw-provision-infrastructure.yml"
     permissions:
       contents: read
@@ -64,7 +68,8 @@ jobs:
   # FRONTEND ------------------------------------------------------------------------------------
   frontend:
     needs: [determine-actions, provision-infrastructure]
-    if: needs.determine-actions.outputs.frontend == 'true'
+    if: (always() && needs.provision-infrastructure.result == 'skipped' && needs.determine-actions.outputs.frontend=='true' ) || needs.determine-actions.outputs.frontend == 'true'
+
     uses: "./.github/workflows/rw-deploy-app.yml"
     permissions:
       contents: read
@@ -88,7 +93,7 @@ jobs:
   # BACKEND ------------------------------------------------------------------------------------
   backend:
     needs: [determine-actions, provision-infrastructure]
-    if: needs.determine-actions.outputs.backend == 'true'
+    if: (always() && needs.provision-infrastructure.result == 'skipped' && needs.determine-actions.outputs.backend=='true' ) || needs.determine-actions.outputs.backend == 'true'
     uses: "./.github/workflows/rw-deploy-app.yml"
     permissions:
       contents: read
