@@ -7,6 +7,10 @@ on:
       - staging
       - main
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   determine-actions:
     runs-on: ubuntu-latest
