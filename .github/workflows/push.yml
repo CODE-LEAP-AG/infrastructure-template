@@ -1,4 +1,4 @@
-name: "Open Pull Request to branch Dev"
+name: "Push (accept PR) to branch Dev"
 
 on:
   push:
