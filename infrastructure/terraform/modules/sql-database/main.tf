@@ -5,15 +5,15 @@ resource "azurerm_postgresql_flexible_server" "pg_flexlible_server" {
 
   administrator_login    = var.administrator_login
   administrator_password = var.administrator_password
-
-  sku_name     = "GP_Standard_D4s_v3"
+  
+  sku_name     = "B_Standard_B1ms"
   storage_mb   = 32768
   storage_tier = "P4"
   version      = "12"
-
-  high_availability {
-    mode = "SameZone"
-  }
+  auto_grow_enabled = false
+  
+  backup_retention_days = 7
+  geo_redundant_backup_enabled = false
 
   lifecycle {
     ignore_changes = [
