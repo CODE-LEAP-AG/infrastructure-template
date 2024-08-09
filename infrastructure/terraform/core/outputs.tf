@@ -22,6 +22,6 @@ output "storage_account" {
   value = module.storage_account
 }
 
-output "sql_database" {
-  value = module.sql_database
-}
+# output "sql_database" {
+#   value = module.sql_database
+# }
