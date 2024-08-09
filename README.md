@@ -21,8 +21,7 @@ It can also by used as a reference for initialization stage to start a project m
 │   ├── helm-chart/
 │   └── terraform/
 │       ├── core/
-│       ├── modules/
-│       └── preview/
+│       └── modules/
 ├── backend/
 ├── frontend/
 └── README.md
@@ -30,6 +29,7 @@ It can also by used as a reference for initialization stage to start a project m
 ## Tech stack
 - Docker
 - Terraform with Azure
+- Prometheus
 - GitHub Actions
 ## To make it works
 This project uses Service Principal (App Registration) to authenticate Terraform to perform provisioning resources.
