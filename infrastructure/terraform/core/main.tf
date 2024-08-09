@@ -72,12 +72,12 @@ module "storage_account" {
   quota_debezium_data   = 50
 }
 
-module "sql_database" {
-  depends_on             = [module.rg]
-  source                 = "../modules/sql-database"
-  prefix                 = var.prefix
-  location               = var.location
-  rg_name                = module.rg.rg.name
-  administrator_login    = var.administrator_login
-  administrator_password = var.administrator_password
-}
+# module "sql_database" {
+#   depends_on             = [module.rg]
+#   source                 = "../modules/sql-database"
+#   prefix                 = var.prefix
+#   location               = var.location
+#   rg_name                = module.rg.rg.name
+#   administrator_login    = var.administrator_login
+#   administrator_password = var.administrator_password
+# }
